@@ -3,9 +3,13 @@ import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { ProjectsService } from "./projects.service";
 import { PROJECT_REPOSITORY } from "./domain/project-repository.interface";
 import { InMemoryProjectRepository } from "./infra/in-memory-project.repository";
+import { NotificationsService } from "../notifications/notifications.service";
+import { NOTIFICATION_REPOSITORY } from "../notifications/domain/notification-repository.interface";
+import { InMemoryNotificationRepository } from "../notifications/infra/in-memory-notification.repository";
 
 describe("ProjectsService", () => {
   let service: ProjectsService;
+  let notificationsService: NotificationsService;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -13,10 +17,14 @@ describe("ProjectsService", () => {
         ProjectsService,
         InMemoryProjectRepository,
         { provide: PROJECT_REPOSITORY, useExisting: InMemoryProjectRepository },
+        NotificationsService,
+        InMemoryNotificationRepository,
+        { provide: NOTIFICATION_REPOSITORY, useExisting: InMemoryNotificationRepository },
       ],
     }).compile();
 
     service = moduleRef.get(ProjectsService);
+    notificationsService = moduleRef.get(NotificationsService);
   });
 
   describe("criação de projeto e etapas automáticas", () => {
@@ -327,6 +335,70 @@ describe("ProjectsService", () => {
       expect(d1.responsibleId).toBe("user-vitoria");
       expect(d2.responsibleId).toBe("user-thaina");
       expect(d1.name).not.toBe(d2.name);
+    });
+  });
+
+  describe("integração com Notificações (Sprint 2)", () => {
+    it("gera notificação RODADAS_ESGOTADAS quando a 3ª rodada é bloqueada", async () => {
+      const { project } = await service.createProject("org-1", "Apto Itacorubi", "INTERIORES");
+
+      await service.addRevisionRound(project.id, "user-socia", "ajuste 1");
+      await service.addRevisionRound(project.id, "user-socia", "ajuste 2");
+
+      try {
+        await service.addRevisionRound(project.id, "user-socia", "ajuste 3");
+      } catch {
+        // esperado — já testado em outro bloco; aqui o foco é a notificação
+      }
+
+      const notifications = await notificationsService.listForUser("user-socia");
+      const revisionNotification = notifications.find((n) => n.type === "RODADAS_ESGOTADAS");
+
+      expect(revisionNotification).toBeDefined();
+      expect(revisionNotification!.referenceId).toBe(project.id);
+    });
+
+    it("NÃO gera notificação quando a rodada é registrada dentro do limite (1ª ou 2ª)", async () => {
+      const { project } = await service.createProject("org-1", "Apto Itacorubi", "INTERIORES");
+
+      await service.addRevisionRound(project.id, "user-socia", "ajuste 1");
+
+      const notifications = await notificationsService.listForUser("user-socia");
+      expect(notifications.filter((n) => n.type === "RODADAS_ESGOTADAS")).toHaveLength(0);
+    });
+
+    it("checkLateStagesAndNotify gera notificação ETAPA_ATRASADA para etapa vencida", async () => {
+      const { project, stages } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const ontem = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      await service.updateStageStatus(stages[0].id, "EM_ANDAMENTO", ontem);
+
+      const result = await service.checkLateStagesAndNotify("org-1", "user-socia");
+
+      expect(result.notified).toBe(1);
+      const notifications = await notificationsService.listForUser("user-socia");
+      expect(notifications.some((n) => n.type === "ETAPA_ATRASADA")).toBe(true);
+    });
+
+    it("checkLateStagesAndNotify NÃO duplica notificação ao rodar duas vezes para a mesma etapa", async () => {
+      const { stages } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const ontem = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      await service.updateStageStatus(stages[0].id, "EM_ANDAMENTO", ontem);
+
+      await service.checkLateStagesAndNotify("org-1", "user-socia");
+      const secondRun = await service.checkLateStagesAndNotify("org-1", "user-socia");
+
+      expect(secondRun.notified).toBe(0); // já notificado na primeira vez
+    });
+
+    it("checkLateStagesAndNotify NÃO notifica etapa de projeto pausado", async () => {
+      const { project, stages } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const ontem = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      await service.updateStageStatus(stages[0].id, "EM_ANDAMENTO", ontem);
+      await service.pauseProject(project.id, "org-1", "Cliente pediu tempo");
+
+      const result = await service.checkLateStagesAndNotify("org-1", "user-socia");
+
+      expect(result.notified).toBe(0);
     });
   });
 });

@@ -13,6 +13,7 @@
     "@nestjs/core": "^10.4.1",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "^10.4.1",
+    "@nestjs/schedule": "^6.1.3",
     "@sga/database": "*",
     "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",

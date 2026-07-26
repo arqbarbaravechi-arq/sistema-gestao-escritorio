@@ -4,9 +4,11 @@ import { ProjectsController } from "./projects.controller";
 import { ProjectsService } from "./projects.service";
 import { PROJECT_REPOSITORY } from "./domain/project-repository.interface";
 import { InMemoryProjectRepository } from "./infra/in-memory-project.repository";
+import { NotificationsModule } from "../notifications/notifications.module";
 
 @Module({
   imports: [
+    NotificationsModule,
     // JwtModule precisa estar disponível aqui porque o JwtAuthGuard
     // (do módulo Auth) é usado diretamente neste controller.
     JwtModule.register({

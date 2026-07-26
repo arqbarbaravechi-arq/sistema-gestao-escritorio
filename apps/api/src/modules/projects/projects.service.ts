@@ -7,6 +7,7 @@ import {
   ProjectType,
   StageStatus,
 } from "./domain/project-repository.interface";
+import { NotificationsService } from "../notifications/notifications.service";
 
 const MAX_REVISION_ROUNDS = 2; // CR-000 — 2 rodadas por projeto, confirmado pela sócia
 
@@ -14,6 +15,7 @@ const MAX_REVISION_ROUNDS = 2; // CR-000 — 2 rodadas por projeto, confirmado p
 export class ProjectsService {
   constructor(
     @Inject(PROJECT_REPOSITORY) private readonly repo: ProjectRepository,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async createProject(organizationId: string, name: string, type: ProjectType) {
@@ -102,10 +104,29 @@ export class ProjectsService {
   // etapa/sub-entrega). Ao tentar uma 3ª, a API bloqueia e orienta a
   // criar um orçamento/aditivo (BudgetAmendment) em vez de permitir a
   // rodada — nunca trata como "rodada extra" implícita.
-  async addRevisionRound(projectId: string, requestedBy: string | null, description: string | null) {
+  async addRevisionRound(
+    projectId: string,
+    requestedBy: string | null,
+    description: string | null,
+  ) {
     const currentCount = await this.repo.countRevisionRounds(projectId);
 
     if (currentCount >= MAX_REVISION_ROUNDS) {
+      // Notifica quem tentou a ação — simplificação documentada: o
+      // roteamento correto ("avisar a sócia/gestora do projeto", não
+      // necessariamente quem clicou) depende de um conceito de
+      // responsável/gestor do projeto que ainda não existe no modelo.
+      // Ver relatório de entrega da Sprint 2 para este ponto em aberto.
+      if (requestedBy) {
+        await this.notifications.notifyUser(
+          requestedBy,
+          "RODADAS_ESGOTADAS",
+          "project",
+          projectId,
+          "As 2 rodadas de revisão incluídas no contrato já foram usadas neste projeto.",
+        );
+      }
+
       throw new BadRequestException({
         message:
           "As 2 rodadas de revisão incluídas no contrato já foram usadas. " +
@@ -116,6 +137,32 @@ export class ProjectsService {
     }
 
     return this.repo.createRevisionRound({ projectId, requestedBy, description });
+  }
+
+  // Verificação de etapas atrasadas — hoje só sob demanda (ver limitação
+  // documentada no controller). Evita duplicar notificação para a mesma
+  // etapa (notifyUserOnce).
+  async checkLateStagesAndNotify(organizationId: string, notifyUserId: string) {
+    const projects = await this.repo.listProjects(organizationId);
+    let notified = 0;
+
+    for (const project of projects) {
+      const stages = await this.repo.listStagesByProject(project.id);
+      for (const stage of stages) {
+        if (this.isStageLate(stage, project.status)) {
+          const result = await this.notifications.notifyUserOnce(
+            notifyUserId,
+            "ETAPA_ATRASADA",
+            "project_stage",
+            stage.id,
+            `A etapa "${stage.type}" do projeto "${project.name}" está atrasada.`,
+          );
+          if (result) notified++;
+        }
+      }
+    }
+
+    return { checked: projects.length, notified };
   }
 
   async createBudgetAmendment(projectId: string, reason: string) {

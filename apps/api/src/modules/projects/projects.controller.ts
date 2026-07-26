@@ -93,6 +93,20 @@ export class ProjectsController {
     return this.projectsService.createBudgetAmendment(projectId, dto.reason);
   }
 
+  // Verificação de etapas atrasadas. Disponível hoje apenas sob demanda
+  // (chamada manual via este endpoint) — um agendador automático em
+  // segundo plano (ex: a cada X minutos, sem ninguém precisar clicar)
+  // depende de um serviço de "listar usuários por organização" que
+  // ainda não existe entre os módulos Auth e Projects. Ver relatório
+  // de entrega da Sprint 2 para este ponto em aberto.
+  @Post("check-late-stages")
+  async checkLateStages(@Req() req: AuthenticatedRequest) {
+    return this.projectsService.checkLateStagesAndNotify(
+      req.user!.organizationId,
+      req.user!.sub,
+    );
+  }
+
   @Patch(":projectId/pause")
   async pause(
     @Param("projectId") projectId: string,
