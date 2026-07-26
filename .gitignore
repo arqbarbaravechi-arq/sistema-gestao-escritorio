@@ -36,3 +36,6 @@ coverage/
 # Docker
 postgres_data/
 redis_data/
+-e 
+# Removido do controle de versao ate o token ter escopo 'workflow'
+.github/workflows/ci.yml
