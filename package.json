@@ -1,0 +1,29 @@
+{
+  "name": "sistema-gestao-arquitetura",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Sistema de gestão para escritório de arquitetura — Sprint 0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/api & npm run dev --workspace=apps/web",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "db:migrate": "npm run db:migrate --workspace=packages/database",
+    "db:generate": "npm run db:generate --workspace=packages/database",
+    "prepare": "husky install || true"
+  },
+  "devDependencies": {
+    "eslint": "^9.9.0",
+    "prettier": "^3.3.3",
+    "husky": "^9.1.5",
+    "lint-staged": "^15.2.9",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

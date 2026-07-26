@@ -1,0 +1,244 @@
+// Schema inicial — Sprint 0
+// Escopo: apenas entidades necessárias para a Fase 0 (Projetos + Notificações)
+// conforme PRD v2.0 e Addendum de Decisões Confirmadas (CR-000).
+// Módulos de fases futuras (CRM, Obra, Fornecedores, Financeiro) NÃO são
+// modelados ainda — serão adicionados quando essas fases forem priorizadas.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Multi-tenant estrutural (Decisão 1 do Addendum:
+// preparado para SaaS futuro, sem RLS pleno nesta fase)
+// ─────────────────────────────────────────────
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  users    User[]
+  projects Project[]
+  configs  SystemConfig[]
+
+  @@map("organizations")
+}
+
+// ─────────────────────────────────────────────
+// Autenticação e permissões (RBAC por papel)
+// ─────────────────────────────────────────────
+
+enum Role {
+  SOCIA       // Admin — acesso total
+  ARQUITETA_JR
+  ESTAGIARIA
+  ORCAMENTARIA
+  FINANCEIRO
+}
+
+model User {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  name      String
+  email     String   @unique
+  passwordHash String
+  role      Role
+  avatarColor String @default("#6366F1")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  stagesResponsible     ProjectStage[]      @relation("StageResponsible")
+  deliverablesResponsible StageDeliverable[] @relation("DeliverableResponsible")
+  notifications         Notification[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// Projetos — núcleo da Fase 0
+// ─────────────────────────────────────────────
+
+enum ProjectType {
+  INTERIORES
+  ARQUITETONICO
+  COMERCIAL
+  CONSULTORIA
+}
+
+enum ProjectStatus {
+  ATIVO
+  PAUSADO
+  CANCELADO
+  CONCLUIDO
+}
+
+model Project {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  name        String
+  type        ProjectType
+  status      ProjectStatus @default(ATIVO)
+  statusReason String?      // motivo de pausa/cancelamento, quando aplicável
+
+  contractValue Decimal? @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stages         ProjectStage[]
+  revisionRounds RevisionRound[]     // vinculado ao PROJETO (CR-000), não à etapa
+  budgetAmendments BudgetAmendment[]
+
+  @@index([organizationId])
+  @@map("projects")
+}
+
+enum StageType {
+  BRIEFING
+  MEDICAO
+  ASBUILT
+  LAYOUT
+  EXECUTIVO
+  ORCAMENTO
+  OBRA
+  ENTREGA
+}
+
+enum StageStatus {
+  NAO_INICIADO
+  EM_ANDAMENTO
+  EM_REVISAO
+  APROVADO
+  ATRASADO
+}
+
+enum StageMode {
+  PADRAO
+  CICLO_ABERTO // "modo exceção" — PRD v2.0 §3.5
+}
+
+model ProjectStage {
+  id        String @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  type   StageType
+  status StageStatus @default(NAO_INICIADO)
+  mode   StageMode   @default(PADRAO)
+
+  responsibleId String?
+  responsible   User? @relation("StageResponsible", fields: [responsibleId], references: [id])
+
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  deliverables StageDeliverable[]
+
+  @@index([projectId])
+  @@map("project_stages")
+}
+
+// Sub-entregas dentro de uma etapa (ex: Executivo de obra vs. Caderno de
+// interiores, responsáveis diferentes) — mantido do desenho da UX v2.0,
+// mas SEM contador de revisão próprio (corrigido pelo CR-000: revisão é
+// por projeto, não por sub-entrega).
+model StageDeliverable {
+  id      String @id @default(cuid())
+  stageId String
+  stage   ProjectStage @relation(fields: [stageId], references: [id])
+
+  name   String // ex: "Executivo de obra", "Caderno de interiores"
+  status StageStatus @default(NAO_INICIADO)
+
+  responsibleId String?
+  responsible   User? @relation("DeliverableResponsible", fields: [responsibleId], references: [id])
+
+  dueDate DateTime?
+
+  @@index([stageId])
+  @@map("stage_deliverables")
+}
+
+// Rodada de revisão — vinculada ao PROJETO, conforme CR-000.
+// Regra de negócio (PRD v2.0 + Addendum): 2 rodadas incluídas por projeto.
+model RevisionRound {
+  id        String @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  number      Int      // 1 ou 2 (limite validado na camada de aplicação)
+  requestedBy String?
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@index([projectId])
+  @@map("revision_rounds")
+}
+
+// Novo orçamento/aditivo gerado quando as 2 rodadas incluídas se esgotam
+// (CR-000) — objeto distinto do fluxo de aprovação original.
+model BudgetAmendment {
+  id        String @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  reason    String   // por que o aditivo foi necessário
+  value     Decimal? @db.Decimal(12, 2)
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+  @@map("budget_amendments")
+}
+
+// ─────────────────────────────────────────────
+// Notificações — segundo módulo da Fase 0
+// ─────────────────────────────────────────────
+
+enum NotificationType {
+  ETAPA_ATRASADA
+  SUBENTREGA_PRONTA_REVISAO
+  LEAD_SEM_FOLLOWUP       // reservado para Fase 1 (CRM) — schema já compatível
+  RODADAS_ESGOTADAS
+}
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  type          NotificationType
+  referenceType String  // ex: "project", "project_stage"
+  referenceId   String
+  read          Boolean @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([userId, read])
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────────
+// Configuração de sistema — regras de negócio ajustáveis
+// (PRD v2.0 §3: capacidade saudável, tolerância de atraso etc.)
+// ─────────────────────────────────────────────
+
+model SystemConfig {
+  id             String @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  key   String // ex: "capacidade_saudavel_projetos", "tolerancia_atraso_dias"
+  value String
+
+  @@unique([organizationId, key])
+  @@map("system_configs")
+}

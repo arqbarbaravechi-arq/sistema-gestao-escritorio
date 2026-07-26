@@ -1,0 +1,38 @@
+# Dependências
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+dist/
+build/
+.next/
+out/
+
+# Ambiente
+.env
+.env.local
+.env.*.local
+
+# Prisma
+packages/database/prisma/migrations/dev/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testes
+coverage/
+
+# Docker
+postgres_data/
+redis_data/
