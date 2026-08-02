@@ -36,6 +36,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/compras", label: "Gestão de Compras", icon: "🛒", status: "pronto" },
   { href: "/curva-abc", label: "Curva ABC de Custos", icon: "📊", status: "pronto" },
   { href: "/crm", label: "CRM de Vendas", icon: "📇", status: "pronto" },
+  { href: "/app-mobile", label: "App no Celular", icon: "📲", status: "pronto" },
   { href: "/pagamentos", label: "Pagamento Integrado", icon: "💳", status: "em-breve" },
   { href: "/agentes-ia", label: "Agentes de IA", icon: "🤖", status: "em-breve" },
 ];
