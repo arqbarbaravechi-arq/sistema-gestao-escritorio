@@ -7,7 +7,7 @@ export type ProjectStatus = "ATIVO" | "PAUSADO" | "CANCELADO" | "CONCLUIDO";
 export type StageType =
   | "BRIEFING"
   | "MEDICAO"
-  | "ASBUILT"
+  | "ESTUDO_PRELIMINAR"
   | "LAYOUT"
   | "EXECUTIVO"
   | "ORCAMENTO"
@@ -22,7 +22,7 @@ export type StageMode = "PADRAO" | "CICLO_ABERTO";
 export const DEFAULT_STAGE_ORDER: StageType[] = [
   "BRIEFING",
   "MEDICAO",
-  "ASBUILT",
+  "ESTUDO_PRELIMINAR",
   "LAYOUT",
   "EXECUTIVO",
   "ORCAMENTO",

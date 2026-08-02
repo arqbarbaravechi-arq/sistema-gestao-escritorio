@@ -60,7 +60,7 @@ export interface ProjectDetail {
 export const STAGE_LABELS: Record<string, string> = {
   BRIEFING: "Briefing",
   MEDICAO: "Medição",
-  ASBUILT: "As-built",
+  ESTUDO_PRELIMINAR: "Estudo Preliminar",
   LAYOUT: "Layout",
   EXECUTIVO: "Executivo",
   ORCAMENTO: "Orçamento",
