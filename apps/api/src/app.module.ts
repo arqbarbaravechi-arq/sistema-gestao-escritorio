@@ -6,10 +6,11 @@ import { NotificationsModule } from "./modules/notifications/notifications.modul
 import { ClientsModule } from "./modules/clients/clients.module";
 import { ProcurementModule } from "./modules/procurement/procurement.module";
 import { CrmModule } from "./modules/crm/crm.module";
+import { BillingModule } from "./modules/billing/billing.module";
 
 // Módulo raiz. Fase 0 completa. CR-001 em andamento: Portal do Cliente,
-// Templates de Projeto, Clientes, Gestão de Compras, Curva ABC e CRM
-// de Vendas prontos.
+// Templates, Clientes, Gestão de Compras, Curva ABC, CRM, App Mobile
+// (PWA) e Cobranças (base de Pagamento Integrado) prontos.
 @Module({
   imports: [
     AuthModule,
@@ -18,6 +19,7 @@ import { CrmModule } from "./modules/crm/crm.module";
     NotificationsModule,
     ProcurementModule,
     CrmModule,
+    BillingModule,
   ],
   controllers: [HealthController],
   providers: [],

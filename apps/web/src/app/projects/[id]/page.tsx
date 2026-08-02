@@ -7,6 +7,15 @@ import AppShell from "@/components/AppShell";
 import { apiFetch, ApiError } from "@/lib/api";
 import { ProjectDetail, STAGE_LABELS, StageStatus, Client } from "@/lib/types";
 
+interface PaymentRequest {
+  id: string;
+  description: string;
+  value: number;
+  status: "PENDENTE" | "PAGO" | "CANCELADO";
+  dueDate: string | null;
+  paidAt: string | null;
+}
+
 interface Supplier {
   id: string;
   name: string;
@@ -58,6 +67,9 @@ export default function ProjectDetailPage() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [quoteSupplierId, setQuoteSupplierId] = useState("");
   const [quoteValue, setQuoteValue] = useState("");
+  const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
+  const [paymentDescription, setPaymentDescription] = useState("");
+  const [paymentValue, setPaymentValue] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -75,6 +87,9 @@ export default function ProjectDetailPage() {
         .catch(() => {});
       apiFetch<Quote[]>(`/projects/${projectId}/quotes`)
         .then(setQuotes)
+        .catch(() => {});
+      apiFetch<PaymentRequest[]>(`/projects/${projectId}/payment-requests`)
+        .then(setPaymentRequests)
         .catch(() => {});
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar projeto");
@@ -175,6 +190,42 @@ export default function ProjectDetailPage() {
       setActionMessage("✅ Novo orçamento (aditivo) registrado.");
     } catch (err) {
       setActionMessage(err instanceof Error ? err.message : "Erro ao criar aditivo");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function addPaymentRequest(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setActionMessage(null);
+    try {
+      await apiFetch(`/projects/${projectId}/payment-requests`, {
+        method: "POST",
+        body: JSON.stringify({ description: paymentDescription, value: Number(paymentValue) }),
+      });
+      setPaymentDescription("");
+      setPaymentValue("");
+      const updated = await apiFetch<PaymentRequest[]>(`/projects/${projectId}/payment-requests`);
+      setPaymentRequests(updated);
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : "Erro ao criar cobrança");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function markPaymentAsPaid(requestId: string) {
+    setBusy(true);
+    setActionMessage(null);
+    try {
+      await apiFetch(`/projects/${projectId}/payment-requests/${requestId}/mark-paid`, {
+        method: "PATCH",
+      });
+      const updated = await apiFetch<PaymentRequest[]>(`/projects/${projectId}/payment-requests`);
+      setPaymentRequests(updated);
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : "Erro ao marcar como paga");
     } finally {
       setBusy(false);
     }
@@ -401,6 +452,81 @@ export default function ProjectDetailPage() {
                   {q.status === "PENDENTE" && (
                     <button onClick={() => approveQuote(q.id)} disabled={busy} style={buttonSecondary}>
                       Aprovar
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Cobranças (CR-001, item 7 - base de Pagamento Integrado) */}
+      <div
+        style={{
+          marginTop: "1.5rem",
+          padding: "1rem",
+          border: "1px solid #e5e5e5",
+          borderRadius: "8px",
+        }}
+      >
+        <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.25rem" }}>
+          Cobranças
+        </div>
+        <p style={{ fontSize: "0.72rem", color: "#999", marginBottom: "0.5rem" }}>
+          Controle manual — marque como paga quando o dinheiro chegar (Pix, transferência).
+          Não processa pagamento online.
+        </p>
+
+        <form onSubmit={addPaymentRequest} style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem", flexWrap: "wrap" }}>
+          <input
+            type="text"
+            placeholder="Descrição (ex: Parcela 1/4)"
+            value={paymentDescription}
+            onChange={(e) => setPaymentDescription(e.target.value)}
+            required
+            style={{ flex: "1 1 180px", padding: "0.4rem" }}
+          />
+          <input
+            type="number"
+            placeholder="Valor (R$)"
+            value={paymentValue}
+            onChange={(e) => setPaymentValue(e.target.value)}
+            required
+            min="0.01"
+            step="0.01"
+            style={{ width: "140px", padding: "0.4rem" }}
+          />
+          <button type="submit" disabled={busy} style={buttonSecondary}>
+            + Nova cobrança
+          </button>
+        </form>
+
+        {paymentRequests.length > 0 && (
+          <div>
+            {paymentRequests.map((r) => {
+              const statusColor =
+                r.status === "PAGO" ? "#16a34a" : r.status === "CANCELADO" ? "#999" : "#d97706";
+              return (
+                <div
+                  key={r.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "0.5rem 0",
+                    borderTop: "1px solid #f0f0f0",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  <span>
+                    {r.description} —{" "}
+                    <strong>R$ {r.value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong>
+                    <span style={{ color: statusColor, marginLeft: "0.5rem" }}>({r.status})</span>
+                  </span>
+                  {r.status === "PENDENTE" && (
+                    <button onClick={() => markPaymentAsPaid(r.id)} disabled={busy} style={buttonSecondary}>
+                      Marcar como paga
                     </button>
                   )}
                 </div>
