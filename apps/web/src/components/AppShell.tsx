@@ -33,7 +33,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/equipe", label: "Equipe", icon: "👥", status: "em-breve" },
   { href: "/portal-cliente", label: "Portal do Cliente", icon: "🔑", status: "pronto" },
   { href: "/templates", label: "Templates de Projeto", icon: "📐", status: "pronto" },
-  { href: "/compras", label: "Gestão de Compras", icon: "🛒", status: "em-breve" },
+  { href: "/compras", label: "Gestão de Compras", icon: "🛒", status: "pronto" },
   { href: "/curva-abc", label: "Curva ABC de Custos", icon: "📊", status: "em-breve" },
   { href: "/crm", label: "CRM de Vendas", icon: "📇", status: "em-breve" },
   { href: "/pagamentos", label: "Pagamento Integrado", icon: "💳", status: "em-breve" },

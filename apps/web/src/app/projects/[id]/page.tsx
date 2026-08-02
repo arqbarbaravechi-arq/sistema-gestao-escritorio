@@ -7,6 +7,27 @@ import AppShell from "@/components/AppShell";
 import { apiFetch, ApiError } from "@/lib/api";
 import { ProjectDetail, STAGE_LABELS, StageStatus, Client } from "@/lib/types";
 
+interface Supplier {
+  id: string;
+  name: string;
+  category: string;
+}
+
+interface Quote {
+  id: string;
+  supplierId: string;
+  category: string;
+  value: number;
+  status: "PENDENTE" | "APROVADA" | "RECUSADA";
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  MARCENARIA: "Marcenaria",
+  MARMORARIA: "Marmoraria",
+  OBRA_CIVIL: "Obra civil",
+  OUTRO: "Outro",
+};
+
 const STAGE_STATUS_COLOR: Record<StageStatus, string> = {
   NAO_INICIADO: "#d1d5db",
   EM_ANDAMENTO: "#3b82f6",
@@ -33,6 +54,10 @@ export default function ProjectDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [quoteSupplierId, setQuoteSupplierId] = useState("");
+  const [quoteValue, setQuoteValue] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -45,6 +70,12 @@ export default function ProjectDetailPage() {
           // projeto — degradação graciosa, mesma lógica já usada com
           // templates na tela de criação de projeto.
         });
+      apiFetch<Supplier[]>("/suppliers")
+        .then(setSuppliers)
+        .catch(() => {});
+      apiFetch<Quote[]>(`/projects/${projectId}/quotes`)
+        .then(setQuotes)
+        .catch(() => {});
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar projeto");
     }
@@ -93,6 +124,41 @@ export default function ProjectDetailPage() {
       } else {
         setActionMessage(err instanceof Error ? err.message : "Erro ao registrar rodada");
       }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function addQuote(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setActionMessage(null);
+    try {
+      await apiFetch(`/projects/${projectId}/quotes`, {
+        method: "POST",
+        body: JSON.stringify({ supplierId: quoteSupplierId, value: Number(quoteValue) }),
+      });
+      setQuoteSupplierId("");
+      setQuoteValue("");
+      const updated = await apiFetch<Quote[]>(`/projects/${projectId}/quotes`);
+      setQuotes(updated);
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : "Erro ao registrar cotação");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function approveQuote(quoteId: string) {
+    setBusy(true);
+    setActionMessage(null);
+    try {
+      await apiFetch(`/projects/${projectId}/quotes/${quoteId}/approve`, { method: "PATCH" });
+      const updated = await apiFetch<Quote[]>(`/projects/${projectId}/quotes`);
+      setQuotes(updated);
+      setActionMessage("✅ Cotação aprovada — as demais da mesma categoria foram recusadas automaticamente.");
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : "Erro ao aprovar cotação");
     } finally {
       setBusy(false);
     }
@@ -256,6 +322,93 @@ export default function ProjectDetailPage() {
       {actionMessage && (
         <p style={{ marginTop: "0.75rem", fontSize: "0.85rem", color: "#374151" }}>{actionMessage}</p>
       )}
+
+      {/* Gestão de Compras — cotações (CR-001, item 3) */}
+      <div
+        style={{
+          marginTop: "1.5rem",
+          padding: "1rem",
+          border: "1px solid #e5e5e5",
+          borderRadius: "8px",
+        }}
+      >
+        <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.5rem" }}>
+          Cotações de fornecedores
+        </div>
+
+        {suppliers.length === 0 ? (
+          <p style={{ fontSize: "0.8rem", color: "#999" }}>
+            Nenhum fornecedor cadastrado ainda — cadastre em &quot;Gestão de Compras&quot; no menu.
+          </p>
+        ) : (
+          <form onSubmit={addQuote} style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem", flexWrap: "wrap" }}>
+            <select
+              value={quoteSupplierId}
+              onChange={(e) => setQuoteSupplierId(e.target.value)}
+              required
+              style={{ flex: "1 1 160px", padding: "0.4rem" }}
+            >
+              <option value="" disabled>
+                Fornecedor
+              </option>
+              {suppliers.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} ({CATEGORY_LABELS[s.category] ?? s.category})
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              placeholder="Valor (R$)"
+              value={quoteValue}
+              onChange={(e) => setQuoteValue(e.target.value)}
+              required
+              min="0.01"
+              step="0.01"
+              style={{ width: "140px", padding: "0.4rem" }}
+            />
+            <button type="submit" disabled={busy} style={buttonSecondary}>
+              + Registrar cotação
+            </button>
+          </form>
+        )}
+
+        {quotes.length > 0 && (
+          <div>
+            {quotes.map((q) => {
+              const supplier = suppliers.find((s) => s.id === q.supplierId);
+              const statusColor =
+                q.status === "APROVADA" ? "#16a34a" : q.status === "RECUSADA" ? "#dc2626" : "#666";
+              return (
+                <div
+                  key={q.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "0.5rem 0",
+                    borderTop: "1px solid #f0f0f0",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  <span>
+                    {supplier?.name ?? "Fornecedor"} —{" "}
+                    <strong>
+                      R$ {q.value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </strong>
+                    <span style={{ color: statusColor, marginLeft: "0.5rem" }}>({q.status})</span>
+                  </span>
+                  {q.status === "PENDENTE" && (
+                    <button onClick={() => approveQuote(q.id)} disabled={busy} style={buttonSecondary}>
+                      Aprovar
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Etapas */}
       <h2 style={{ fontSize: "1rem", marginTop: "2rem" }}>Etapas</h2>
