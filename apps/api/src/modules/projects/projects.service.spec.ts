@@ -338,6 +338,66 @@ describe("ProjectsService", () => {
     });
   });
 
+  describe("Templates de Projeto (CR-001, item 2)", () => {
+    it("cria projeto sem template normalmente (sem prazos automáticos)", async () => {
+      const { stages } = await service.createProject("org-1", "Sem Template", "INTERIORES");
+      expect(stages.every((s) => s.dueDate === null)).toBe(true);
+    });
+
+    it("aplica prazos automáticos por etapa quando um template é informado", async () => {
+      const { project, stages } = await service.createProject(
+        "org-1",
+        "Com Template",
+        "INTERIORES",
+        "interiores-padrao",
+      );
+
+      const briefing = stages.find((s) => s.type === "BRIEFING")!;
+      const entrega = stages.find((s) => s.type === "ENTREGA")!;
+
+      expect(briefing.dueDate).not.toBeNull();
+      expect(entrega.dueDate).not.toBeNull();
+
+      const expectedBriefingDue = new Date(project.createdAt);
+      expectedBriefingDue.setDate(expectedBriefingDue.getDate() + 3);
+      expect(briefing.dueDate!.toDateString()).toBe(expectedBriefingDue.toDateString());
+    });
+
+    it("rejeita template inexistente", async () => {
+      await expect(
+        service.createProject("org-1", "Projeto X", "INTERIORES", "template-que-nao-existe"),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("prazos de etapas posteriores são sempre maiores ou iguais aos anteriores (template consistente)", async () => {
+      const { stages } = await service.createProject(
+        "org-1",
+        "Consistencia",
+        "ARQUITETONICO",
+        "arquitetonico-residencial",
+      );
+
+      const withDueDate = stages.filter((s) => s.dueDate !== null);
+      for (let i = 1; i < withDueDate.length; i++) {
+        expect(withDueDate[i].dueDate!.getTime()).toBeGreaterThanOrEqual(
+          withDueDate[i - 1].dueDate!.getTime(),
+        );
+      }
+    });
+
+    it("template 'consultoria-rapida' não define prazo para etapas que não fazem parte do fluxo enxuto (ex: OBRA)", async () => {
+      const { stages } = await service.createProject(
+        "org-1",
+        "Consultoria X",
+        "CONSULTORIA",
+        "consultoria-rapida",
+      );
+
+      const obra = stages.find((s) => s.type === "OBRA")!;
+      expect(obra.dueDate).toBeNull();
+    });
+  });
+
   describe("Portal do Cliente (CR-001, item 1)", () => {
     it("gera um token de acesso único para cada projeto criado", async () => {
       const { project: p1 } = await service.createProject("org-1", "Projeto 1", "INTERIORES");

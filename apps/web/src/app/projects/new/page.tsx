@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
@@ -8,12 +8,29 @@ import { Project, ProjectType, PROJECT_TYPE_LABELS } from "@/lib/types";
 
 const TYPES: ProjectType[] = ["INTERIORES", "ARQUITETONICO", "COMERCIAL", "CONSULTORIA"];
 
+interface Template {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export default function NewProjectPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [type, setType] = useState<ProjectType>("INTERIORES");
+  const [templateId, setTemplateId] = useState<string>("");
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    apiFetch<Template[]>("/templates")
+      .then(setTemplates)
+      .catch(() => {
+        // Falha ao carregar templates não deve travar a criação de
+        // projeto — segue sem opção de template, degradação graciosa.
+      });
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,7 +40,7 @@ export default function NewProjectPage() {
     try {
       const result = await apiFetch<{ project: Project }>("/projects", {
         method: "POST",
-        body: JSON.stringify({ name, type }),
+        body: JSON.stringify({ name, type, templateId: templateId || undefined }),
       });
       router.push(`/projects/${result.project.id}`);
     } catch (err) {
@@ -32,6 +49,8 @@ export default function NewProjectPage() {
       setLoading(false);
     }
   }
+
+  const selectedTemplate = templates.find((t) => t.id === templateId);
 
   return (
     <main style={{ fontFamily: "sans-serif", maxWidth: "480px", margin: "3rem auto", padding: "0 1.5rem" }}>
@@ -58,7 +77,7 @@ export default function NewProjectPage() {
           />
         </label>
 
-        <label style={{ display: "block", marginBottom: "1.5rem" }}>
+        <label style={{ display: "block", marginBottom: "0.75rem" }}>
           <span style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.25rem" }}>Tipo</span>
           <select
             value={type}
@@ -72,6 +91,31 @@ export default function NewProjectPage() {
             ))}
           </select>
         </label>
+
+        <label style={{ display: "block", marginBottom: "0.5rem" }}>
+          <span style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.25rem" }}>
+            Template (opcional)
+          </span>
+          <select
+            value={templateId}
+            onChange={(e) => setTemplateId(e.target.value)}
+            style={{ width: "100%", padding: "0.5rem" }}
+          >
+            <option value="">Nenhum — definir prazos manualmente depois</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {selectedTemplate && (
+          <p style={{ fontSize: "0.78rem", color: "#666", marginBottom: "1.5rem", marginTop: "0.3rem" }}>
+            {selectedTemplate.description}
+          </p>
+        )}
+        {!selectedTemplate && <div style={{ marginBottom: "1.5rem" }} />}
 
         {error && (
           <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem" }}>{error}</p>

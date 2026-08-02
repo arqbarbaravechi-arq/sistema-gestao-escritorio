@@ -1,4 +1,4 @@
-import { IsIn, IsString, MinLength } from "class-validator";
+import { IsIn, IsOptional, IsString, MinLength } from "class-validator";
 
 const PROJECT_TYPES = ["INTERIORES", "ARQUITETONICO", "COMERCIAL", "CONSULTORIA"] as const;
 
@@ -9,4 +9,8 @@ export class CreateProjectDto {
 
   @IsIn(PROJECT_TYPES)
   type!: (typeof PROJECT_TYPES)[number];
+
+  @IsOptional()
+  @IsString()
+  templateId?: string;
 }

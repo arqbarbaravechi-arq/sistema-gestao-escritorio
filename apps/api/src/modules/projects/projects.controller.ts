@@ -14,6 +14,7 @@ import { UpdateStageStatusDto } from "./dto/update-stage-status.dto";
 import { ReasonDto } from "./dto/reason.dto";
 import { AddRevisionRoundDto } from "./dto/add-revision-round.dto";
 import { JwtAuthGuard, AuthenticatedRequest } from "../auth/security/jwt-auth.guard";
+import { PROJECT_TEMPLATES } from "./domain/project-templates";
 
 // Controller PÚBLICO — sem @UseGuards(JwtAuthGuard). Portal do Cliente
 // (CR-001, item 1): acessível por quem tiver o link/token, sem login.
@@ -27,6 +28,14 @@ export class PublicProjectsController {
   }
 }
 
+@Controller("templates")
+export class TemplatesController {
+  @Get()
+  list() {
+    return PROJECT_TEMPLATES;
+  }
+}
+
 @Controller("projects")
 @UseGuards(JwtAuthGuard) // todas as rotas deste controller exigem login
 export class ProjectsController {
@@ -35,7 +44,7 @@ export class ProjectsController {
   @Post()
   async create(@Body() dto: CreateProjectDto, @Req() req: AuthenticatedRequest) {
     const organizationId = req.user!.organizationId;
-    return this.projectsService.createProject(organizationId, dto.name, dto.type);
+    return this.projectsService.createProject(organizationId, dto.name, dto.type, dto.templateId);
   }
 
   @Get()

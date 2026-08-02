@@ -8,6 +8,7 @@ import {
   StageStatus,
 } from "./domain/project-repository.interface";
 import { NotificationsService } from "../notifications/notifications.service";
+import { findTemplate } from "./domain/project-templates";
 
 const MAX_REVISION_ROUNDS = 2; // CR-000 — 2 rodadas por projeto, confirmado pela sócia
 
@@ -18,9 +19,36 @@ export class ProjectsService {
     private readonly notifications: NotificationsService,
   ) {}
 
-  async createProject(organizationId: string, name: string, type: ProjectType) {
+  // Templates de Projeto (CR-001, item 2) — templateId é opcional; sem
+  // ele, o comportamento é idêntico ao de antes (etapas sem prazo).
+  async createProject(
+    organizationId: string,
+    name: string,
+    type: ProjectType,
+    templateId?: string,
+  ) {
     const project = await this.repo.createProject({ organizationId, name, type });
-    const stages = await this.repo.createStagesForProject(project.id);
+    let stages = await this.repo.createStagesForProject(project.id);
+
+    if (templateId) {
+      const template = findTemplate(templateId);
+      if (!template) {
+        throw new BadRequestException(`Template "${templateId}" não encontrado`);
+      }
+
+      stages = await Promise.all(
+        stages.map(async (stage) => {
+          const daysOffset = template.stageDurations[stage.type];
+          if (daysOffset === undefined) return stage;
+
+          const dueDate = new Date(project.createdAt);
+          dueDate.setDate(dueDate.getDate() + daysOffset);
+
+          return this.repo.updateStage(stage.id, { dueDate });
+        }),
+      );
+    }
+
     return { project, stages };
   }
 

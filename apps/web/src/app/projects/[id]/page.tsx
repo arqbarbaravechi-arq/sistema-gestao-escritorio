@@ -294,6 +294,11 @@ export default function ProjectDetailPage() {
               </div>
               <div style={{ fontSize: "0.8rem", color: STAGE_STATUS_COLOR[stage.status] }}>
                 {STAGE_STATUS_LABEL[stage.status]}
+                {stage.dueDate && (
+                  <span style={{ color: "#999", marginLeft: "0.4rem" }}>
+                    · prazo: {new Date(stage.dueDate).toLocaleDateString("pt-BR")}
+                  </span>
+                )}
               </div>
             </div>
 
