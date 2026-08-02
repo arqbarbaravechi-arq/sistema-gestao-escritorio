@@ -28,9 +28,14 @@ export class InMemoryNotificationRepository implements NotificationRepository {
   }
 
   async listByUser(userId: string, onlyUnread = false): Promise<NotificationRecord[]> {
+    // Ordem de inserção (mais recente primeiro), não pelo valor da data
+    // — evita empate quando duas notificações são criadas no mesmo
+    // milissegundo (mesmo problema encontrado e corrigido no módulo
+    // de Obra/Visitas Técnicas).
     return this.notifications
       .filter((n) => n.userId === userId && (!onlyUnread || !n.read))
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      .slice()
+      .reverse();
   }
 
   async markAsRead(id: string): Promise<NotificationRecord> {

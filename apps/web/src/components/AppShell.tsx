@@ -26,7 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/clients", label: "Clientes", icon: "👤", status: "pronto" },
   { href: "/dashboard", label: "Projetos", icon: "📁", status: "pronto" },
   { href: "/notifications", label: "Notificações", icon: "🔔", status: "pronto" },
-  { href: "/obra", label: "Obra", icon: "🏗️", status: "em-breve" },
+  { href: "/obra", label: "Obra", icon: "🏗️", status: "pronto" },
   { href: "/fornecedores", label: "Fornecedores", icon: "🧾", status: "em-breve" },
   { href: "/financeiro", label: "Financeiro", icon: "💰", status: "em-breve" },
   { href: "/biblioteca", label: "Biblioteca", icon: "📚", status: "em-breve" },

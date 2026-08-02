@@ -33,9 +33,13 @@ export class InMemoryPaymentRequestRepository implements PaymentRequestRepositor
   }
 
   async listByProject(projectId: string): Promise<PaymentRequestRecord[]> {
+    // Ordem de inserção (mais recente primeiro) — mesmo ajuste aplicado
+    // em Notificações e Obra/Visitas Técnicas, evitando empate de
+    // milissegundo entre registros criados em sequência rápida.
     return this.requests
       .filter((r) => r.projectId === projectId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      .slice()
+      .reverse();
   }
 
   async updateStatus(

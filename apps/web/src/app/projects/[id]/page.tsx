@@ -7,6 +7,13 @@ import AppShell from "@/components/AppShell";
 import { apiFetch, ApiError } from "@/lib/api";
 import { ProjectDetail, STAGE_LABELS, StageStatus, Client } from "@/lib/types";
 
+interface SiteVisit {
+  id: string;
+  visitDate: string;
+  observation: string;
+  communicateToClient: boolean;
+}
+
 interface PaymentRequest {
   id: string;
   description: string;
@@ -70,6 +77,9 @@ export default function ProjectDetailPage() {
   const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
   const [paymentDescription, setPaymentDescription] = useState("");
   const [paymentValue, setPaymentValue] = useState("");
+  const [siteVisits, setSiteVisits] = useState<SiteVisit[]>([]);
+  const [visitObservation, setVisitObservation] = useState("");
+  const [visitCommunicate, setVisitCommunicate] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -90,6 +100,9 @@ export default function ProjectDetailPage() {
         .catch(() => {});
       apiFetch<PaymentRequest[]>(`/projects/${projectId}/payment-requests`)
         .then(setPaymentRequests)
+        .catch(() => {});
+      apiFetch<SiteVisit[]>(`/projects/${projectId}/site-visits`)
+        .then(setSiteVisits)
         .catch(() => {});
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar projeto");
@@ -226,6 +239,29 @@ export default function ProjectDetailPage() {
       setPaymentRequests(updated);
     } catch (err) {
       setActionMessage(err instanceof Error ? err.message : "Erro ao marcar como paga");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function addSiteVisit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setActionMessage(null);
+    try {
+      await apiFetch(`/projects/${projectId}/site-visits`, {
+        method: "POST",
+        body: JSON.stringify({
+          observation: visitObservation,
+          communicateToClient: visitCommunicate,
+        }),
+      });
+      setVisitObservation("");
+      setVisitCommunicate(false);
+      const updated = await apiFetch<SiteVisit[]>(`/projects/${projectId}/site-visits`);
+      setSiteVisits(updated);
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : "Erro ao registrar visita");
     } finally {
       setBusy(false);
     }
@@ -532,6 +568,77 @@ export default function ProjectDetailPage() {
                 </div>
               );
             })}
+          </div>
+        )}
+      </div>
+
+      {/* Obra - Visitas Tecnicas (PRD v2.0, prioridade maxima) */}
+      <div
+        style={{
+          marginTop: "1.5rem",
+          padding: "1rem",
+          border: "1px solid #e5e5e5",
+          borderRadius: "8px",
+        }}
+      >
+        <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.5rem" }}>
+          Obra — Visitas técnicas
+        </div>
+
+        <form onSubmit={addSiteVisit} style={{ marginBottom: "0.75rem" }}>
+          <textarea
+            placeholder="O que foi observado nesta visita?"
+            value={visitObservation}
+            onChange={(e) => setVisitObservation(e.target.value)}
+            required
+            rows={2}
+            style={{ width: "100%", padding: "0.4rem", boxSizing: "border-box", fontFamily: "inherit" }}
+          />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.4rem" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8rem" }}>
+              <input
+                type="checkbox"
+                checked={visitCommunicate}
+                onChange={(e) => setVisitCommunicate(e.target.checked)}
+              />
+              Preciso comunicar isso ao cliente
+            </label>
+            <button type="submit" disabled={busy} style={buttonSecondary}>
+              + Registrar visita
+            </button>
+          </div>
+        </form>
+
+        {siteVisits.length === 0 ? (
+          <p style={{ fontSize: "0.8rem", color: "#999" }}>Nenhuma visita registrada ainda.</p>
+        ) : (
+          <div>
+            {siteVisits.map((v) => (
+              <div
+                key={v.id}
+                style={{
+                  padding: "0.6rem 0",
+                  borderTop: "1px solid #f0f0f0",
+                  fontSize: "0.85rem",
+                }}
+              >
+                <div style={{ fontSize: "0.72rem", color: "#999" }}>
+                  {new Date(v.visitDate).toLocaleString("pt-BR")}
+                  {v.communicateToClient && (
+                    <span
+                      style={{
+                        marginLeft: "0.5rem",
+                        color: "#dc2626",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      ⚠ comunicado ao cliente
+                    </span>
+                  )}
+                </div>
+                <div>{v.observation}</div>
+              </div>
+            ))}
           </div>
         )}
       </div>
