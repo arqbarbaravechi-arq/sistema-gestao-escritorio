@@ -51,6 +51,33 @@ export class ProjectsService {
     };
   }
 
+  // ── Portal do Cliente (CR-001, item 1) ──
+  // Visão pública, somente leitura, sem exigir login — acessível por
+  // quem tiver o link (token). Deliberadamente NÃO inclui: valor de
+  // contrato, motivo de pausa/cancelamento, responsáveis internos por
+  // nome, ou qualquer rodada de revisão detalhada além da contagem.
+  // Decisão de escopo desta entrega (ver relatório): sem infraestrutura
+  // de e-mail configurada, o "portal" é um link compartilhável, não um
+  // login de cliente com magic-link — isso fica para quando o e-mail
+  // transacional estiver disponível.
+  async getProjectForClient(token: string) {
+    const project = await this.repo.findProjectByClientToken(token);
+    if (!project) throw new NotFoundException("Link inválido ou projeto não encontrado");
+
+    const stages = await this.repo.listStagesByProject(project.id);
+
+    return {
+      projectName: project.name,
+      projectType: project.type,
+      status: project.status,
+      stages: stages.map((s) => ({
+        type: s.type,
+        status: s.status,
+        mode: s.mode,
+      })),
+    };
+  }
+
   // ── Regra de negócio: "atrasado" (PRD v2.0 §3.3) ──
   // Etapa atrasada = data prevista passou sem status "APROVADO", sem
   // tolerância de carência. Exceções (decisões explícitas desta

@@ -37,6 +37,7 @@ export class InMemoryProjectRepository implements ProjectRepository {
       type: data.type,
       status: "ATIVO",
       statusReason: null,
+      clientAccessToken: randomUUID().replace(/-/g, ""), // token de link do Portal do Cliente
       createdAt: new Date(),
     };
     this.projects.push(project);
@@ -47,6 +48,10 @@ export class InMemoryProjectRepository implements ProjectRepository {
     return (
       this.projects.find((p) => p.id === id && p.organizationId === organizationId) ?? null
     );
+  }
+
+  async findProjectByClientToken(token: string): Promise<ProjectRecord | null> {
+    return this.projects.find((p) => p.clientAccessToken === token) ?? null;
   }
 
   async listProjects(organizationId: string): Promise<ProjectRecord[]> {

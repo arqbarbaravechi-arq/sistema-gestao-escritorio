@@ -15,6 +15,18 @@ import { ReasonDto } from "./dto/reason.dto";
 import { AddRevisionRoundDto } from "./dto/add-revision-round.dto";
 import { JwtAuthGuard, AuthenticatedRequest } from "../auth/security/jwt-auth.guard";
 
+// Controller PÚBLICO — sem @UseGuards(JwtAuthGuard). Portal do Cliente
+// (CR-001, item 1): acessível por quem tiver o link/token, sem login.
+@Controller("public/projects")
+export class PublicProjectsController {
+  constructor(private readonly projectsService: ProjectsService) {}
+
+  @Get(":token")
+  async getByClientToken(@Param("token") token: string) {
+    return this.projectsService.getProjectForClient(token);
+  }
+}
+
 @Controller("projects")
 @UseGuards(JwtAuthGuard) // todas as rotas deste controller exigem login
 export class ProjectsController {

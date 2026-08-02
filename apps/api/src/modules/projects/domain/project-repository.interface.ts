@@ -37,6 +37,7 @@ export interface ProjectRecord {
   type: ProjectType;
   status: ProjectStatus;
   statusReason: string | null;
+  clientAccessToken: string; // Portal do Cliente (CR-001, item 1) — link de acesso somente leitura
   createdAt: Date;
 }
 
@@ -90,6 +91,7 @@ export interface ProjectRepository {
     type: ProjectType;
   }): Promise<ProjectRecord>;
   findProjectById(id: string, organizationId: string): Promise<ProjectRecord | null>;
+  findProjectByClientToken(token: string): Promise<ProjectRecord | null>;
   listProjects(organizationId: string): Promise<ProjectRecord[]>;
   updateProjectStatus(
     id: string,

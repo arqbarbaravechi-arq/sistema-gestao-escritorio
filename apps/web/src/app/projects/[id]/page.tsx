@@ -176,6 +176,36 @@ export default function ProjectDetailPage() {
         )}
       </div>
 
+      {/* Portal do Cliente — link compartilhável (CR-001, item 1) */}
+      <div
+        style={{
+          marginTop: "1rem",
+          padding: "1rem",
+          border: "1px solid #e5e5e5",
+          borderRadius: "8px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div>
+          <div style={{ fontSize: "0.85rem", color: "#666" }}>Link para o cliente acompanhar</div>
+          <div style={{ fontSize: "0.8rem", color: "#999", marginTop: "0.15rem" }}>
+            Sem necessidade de login — qualquer pessoa com o link consegue ver o progresso
+          </div>
+        </div>
+        <button
+          onClick={() => {
+            const url = `${window.location.origin}/portal/${project.clientAccessToken}`;
+            navigator.clipboard.writeText(url);
+            setActionMessage("✅ Link copiado para a área de transferência.");
+          }}
+          style={buttonSecondary}
+        >
+          Copiar link
+        </button>
+      </div>
+
       {/* Contador de rodadas de revisão — CR-000 */}
       <div
         style={{

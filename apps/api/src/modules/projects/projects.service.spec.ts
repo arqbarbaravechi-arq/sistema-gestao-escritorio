@@ -338,6 +338,42 @@ describe("ProjectsService", () => {
     });
   });
 
+  describe("Portal do Cliente (CR-001, item 1)", () => {
+    it("gera um token de acesso único para cada projeto criado", async () => {
+      const { project: p1 } = await service.createProject("org-1", "Projeto 1", "INTERIORES");
+      const { project: p2 } = await service.createProject("org-1", "Projeto 2", "INTERIORES");
+
+      expect(p1.clientAccessToken).toBeDefined();
+      expect(p1.clientAccessToken).not.toBe(p2.clientAccessToken);
+    });
+
+    it("retorna a visão pública do projeto a partir do token, sem exigir organização", async () => {
+      const { project } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+
+      const publicView = await service.getProjectForClient(project.clientAccessToken);
+
+      expect(publicView.projectName).toBe("Casa Boa Vista");
+      expect(publicView.stages).toHaveLength(8);
+    });
+
+    it("a visão pública NÃO expõe dados sensíveis (id interno, organizationId, motivo de pausa)", async () => {
+      const { project } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      await service.pauseProject(project.id, "org-1", "Motivo confidencial do cliente concorrente");
+
+      const publicView = await service.getProjectForClient(project.clientAccessToken);
+
+      expect(publicView).not.toHaveProperty("organizationId");
+      expect(publicView).not.toHaveProperty("id");
+      expect(JSON.stringify(publicView)).not.toContain("Motivo confidencial");
+    });
+
+    it("rejeita token inválido/inexistente", async () => {
+      await expect(service.getProjectForClient("token-que-nao-existe")).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
   describe("integração com Notificações (Sprint 2)", () => {
     it("gera notificação RODADAS_ESGOTADAS quando a 3ª rodada é bloqueada", async () => {
       const { project } = await service.createProject("org-1", "Apto Itacorubi", "INTERIORES");

@@ -10,6 +10,7 @@ export interface Project {
   type: ProjectType;
   status: ProjectStatus;
   statusReason: string | null;
+  clientAccessToken: string;
   createdAt: string;
 }
 

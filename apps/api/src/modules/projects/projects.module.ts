@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
-import { ProjectsController } from "./projects.controller";
+import { ProjectsController, PublicProjectsController } from "./projects.controller";
 import { ProjectsService } from "./projects.service";
 import { PROJECT_REPOSITORY } from "./domain/project-repository.interface";
 import { InMemoryProjectRepository } from "./infra/in-memory-project.repository";
@@ -16,7 +16,7 @@ import { NotificationsModule } from "../notifications/notifications.module";
       signOptions: { expiresIn: "8h" },
     }),
   ],
-  controllers: [ProjectsController],
+  controllers: [ProjectsController, PublicProjectsController],
   providers: [
     ProjectsService,
     InMemoryProjectRepository,
