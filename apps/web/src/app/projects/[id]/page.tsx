@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import AppShell from "@/components/AppShell";
 import { apiFetch, ApiError } from "@/lib/api";
 import { ProjectDetail, STAGE_LABELS, StageStatus } from "@/lib/types";
 
@@ -127,24 +128,29 @@ export default function ProjectDetailPage() {
 
   if (error) {
     return (
-      <main style={{ fontFamily: "sans-serif", padding: "2rem", maxWidth: "720px", margin: "0 auto" }}>
-        <p style={{ color: "#c0392b" }}>{error}</p>
-        <Link href="/dashboard">← Voltar</Link>
-      </main>
+      <AppShell>
+        <main style={{ fontFamily: "sans-serif", padding: "2rem", maxWidth: "720px" }}>
+          <p style={{ color: "#c0392b" }}>{error}</p>
+          <Link href="/dashboard">← Voltar</Link>
+        </main>
+      </AppShell>
     );
   }
 
   if (!data) {
     return (
-      <main style={{ fontFamily: "sans-serif", padding: "2rem" }}>
-        <p style={{ color: "#666" }}>Carregando...</p>
-      </main>
+      <AppShell>
+        <main style={{ fontFamily: "sans-serif", padding: "2rem" }}>
+          <p style={{ color: "#666" }}>Carregando...</p>
+        </main>
+      </AppShell>
     );
   }
 
   const { project, stages, revisionRoundsUsed, revisionRoundsAvailable } = data;
 
   return (
+    <AppShell>
     <main style={{ fontFamily: "sans-serif", padding: "2rem", maxWidth: "720px", margin: "0 auto" }}>
       <Link href="/dashboard" style={{ color: "#666", fontSize: "0.85rem" }}>
         ← Projetos
@@ -277,6 +283,7 @@ export default function ProjectDetailPage() {
         ))}
       </div>
     </main>
+    </AppShell>
   );
 }
 
