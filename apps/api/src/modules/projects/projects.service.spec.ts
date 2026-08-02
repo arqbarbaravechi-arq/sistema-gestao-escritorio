@@ -35,8 +35,28 @@ describe("ProjectsService", () => {
     notificationsService = moduleRef.get(NotificationsService);
 
     const clientsService = moduleRef.get(ClientsService);
-    const clientOrg1 = await clientsService.createClient("org-1", "Cliente Teste Org1", null, null);
-    const clientOrg2 = await clientsService.createClient("org-2", "Cliente Teste Org2", null, null);
+    const clientOrg1 = await clientsService.createClient(
+      "org-1",
+      "Cliente Teste Org1",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+    );
+    const clientOrg2 = await clientsService.createClient(
+      "org-2",
+      "Cliente Teste Org2",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+    );
     clientOrg1Id = clientOrg1.id;
     clientOrg2Id = clientOrg2.id;
   });

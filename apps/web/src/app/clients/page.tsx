@@ -82,6 +82,16 @@ export default function ClientsPage() {
                   {c.phone && <span>{c.phone}</span>}
                   {!c.email && !c.phone && <span>Sem contato cadastrado</span>}
                 </div>
+                {c.cpf && (
+                  <div style={{ fontSize: "0.75rem", color: "#999", marginTop: "0.15rem" }}>
+                    CPF: {c.cpf}
+                  </div>
+                )}
+                {c.address && (
+                  <div style={{ fontSize: "0.75rem", color: "#999", marginTop: "0.15rem" }}>
+                    📍 {c.address}
+                  </div>
+                )}
               </div>
             ))}
           </div>

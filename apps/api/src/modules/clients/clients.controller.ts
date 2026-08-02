@@ -15,6 +15,11 @@ export class ClientsController {
       dto.name,
       dto.email ?? null,
       dto.phone ?? null,
+      dto.cpf ?? null,
+      dto.birthDate ? new Date(dto.birthDate) : null,
+      dto.maritalStatus ?? null,
+      dto.address ?? null,
+      dto.projectAddress ?? null,
     );
   }
 

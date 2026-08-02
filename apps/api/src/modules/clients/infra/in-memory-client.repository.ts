@@ -11,6 +11,11 @@ export class InMemoryClientRepository implements ClientRepository {
     name: string;
     email: string | null;
     phone: string | null;
+    cpf: string | null;
+    birthDate: Date | null;
+    maritalStatus: string | null;
+    address: string | null;
+    projectAddress: string | null;
   }): Promise<ClientRecord> {
     const client: ClientRecord = {
       id: randomUUID(),

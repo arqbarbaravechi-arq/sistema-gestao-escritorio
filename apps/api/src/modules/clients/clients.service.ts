@@ -15,8 +15,23 @@ export class ClientsService {
     name: string,
     email: string | null,
     phone: string | null,
+    cpf: string | null,
+    birthDate: Date | null,
+    maritalStatus: string | null,
+    address: string | null,
+    projectAddress: string | null,
   ) {
-    return this.repo.create({ organizationId, name, email, phone });
+    return this.repo.create({
+      organizationId,
+      name,
+      email,
+      phone,
+      cpf,
+      birthDate,
+      maritalStatus,
+      address,
+      projectAddress,
+    });
   }
 
   async listClients(organizationId: string) {
