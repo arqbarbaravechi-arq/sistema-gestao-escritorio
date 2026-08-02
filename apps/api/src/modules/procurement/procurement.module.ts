@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
-import { SuppliersController, QuotesController } from "./procurement.controller";
+import { SuppliersController, QuotesController, AbcCurveController } from "./procurement.controller";
 import { ProcurementService } from "./procurement.service";
 import { PROCUREMENT_REPOSITORY } from "./domain/procurement-repository.interface";
 import { InMemoryProcurementRepository } from "./infra/in-memory-procurement.repository";
@@ -12,7 +12,7 @@ import { InMemoryProcurementRepository } from "./infra/in-memory-procurement.rep
       signOptions: { expiresIn: "8h" },
     }),
   ],
-  controllers: [SuppliersController, QuotesController],
+  controllers: [SuppliersController, QuotesController, AbcCurveController],
   providers: [
     ProcurementService,
     InMemoryProcurementRepository,

@@ -137,4 +137,82 @@ describe("ProcurementService", () => {
       );
     });
   });
+
+  describe("Curva ABC de Custos (CR-001, item 4)", () => {
+    it("classifica corretamente A/B/C usando um exemplo numérico conhecido (800/150/50, total 1000)", async () => {
+      const s1 = await service.createSupplier("org-1", "Fornecedor 800", "OBRA_CIVIL", null);
+      const s2 = await service.createSupplier("org-1", "Fornecedor 150", "MARCENARIA", null);
+      const s3 = await service.createSupplier("org-1", "Fornecedor 50", "MARMORARIA", null);
+
+      const q1 = await service.addQuote("org-1", "project-1", s1.id, 800, null);
+      const q2 = await service.addQuote("org-1", "project-1", s2.id, 150, null);
+      const q3 = await service.addQuote("org-1", "project-1", s3.id, 50, null);
+
+      await service.approveQuote(q1.id);
+      // q1 aprovado já recusa concorrentes da MESMA categoria — mas s2 e
+      // s3 são de categorias diferentes, então aprová-los também funciona.
+      await service.approveQuote(q2.id);
+      await service.approveQuote(q3.id);
+
+      const curve = await service.getABCCurve("project-1");
+
+      expect(curve.totalValue).toBe(1000);
+      expect(curve.items).toHaveLength(3);
+
+      // Item de 800: 80% acumulado exatamente -> Classe A (regra <= 80)
+      expect(curve.items[0].value).toBe(800);
+      expect(curve.items[0].cumulativePercentage).toBe(80);
+      expect(curve.items[0].classification).toBe("A");
+
+      // Item de 150: acumulado 950/1000 = 95% -> Classe B (regra <= 95)
+      expect(curve.items[1].value).toBe(150);
+      expect(curve.items[1].cumulativePercentage).toBe(95);
+      expect(curve.items[1].classification).toBe("B");
+
+      // Item de 50: acumulado 1000/1000 = 100% -> Classe C
+      expect(curve.items[2].value).toBe(50);
+      expect(curve.items[2].cumulativePercentage).toBe(100);
+      expect(curve.items[2].classification).toBe("C");
+
+      expect(curve.summary).toEqual({ countA: 1, countB: 1, countC: 1 });
+    });
+
+    it("considera apenas cotações APROVADAS — ignora PENDENTES e RECUSADAS", async () => {
+      const s1 = await service.createSupplier("org-1", "Fornecedor A", "MARCENARIA", null);
+      const s2 = await service.createSupplier("org-1", "Fornecedor B", "MARCENARIA", null);
+
+      const q1 = await service.addQuote("org-1", "project-1", s1.id, 1000, null);
+      await service.addQuote("org-1", "project-1", s2.id, 2000, null); // fica PENDENTE
+
+      await service.approveQuote(q1.id); // recusa a de 2000 automaticamente (mesma categoria)
+
+      const curve = await service.getABCCurve("project-1");
+
+      expect(curve.items).toHaveLength(1);
+      expect(curve.totalValue).toBe(1000);
+    });
+
+    it("retorna curva vazia quando não há nenhuma cotação aprovada", async () => {
+      const curve = await service.getABCCurve("project-sem-cotacoes");
+
+      expect(curve.totalValue).toBe(0);
+      expect(curve.items).toHaveLength(0);
+      expect(curve.summary).toEqual({ countA: 0, countB: 0, countC: 0 });
+    });
+
+    it("ordena os itens do maior para o menor valor", async () => {
+      const s1 = await service.createSupplier("org-1", "Fornecedor Pequeno", "MARCENARIA", null);
+      const s2 = await service.createSupplier("org-1", "Fornecedor Grande", "MARMORARIA", null);
+
+      const q1 = await service.addQuote("org-1", "project-1", s1.id, 100, null);
+      const q2 = await service.addQuote("org-1", "project-1", s2.id, 900, null);
+      await service.approveQuote(q1.id);
+      await service.approveQuote(q2.id);
+
+      const curve = await service.getABCCurve("project-1");
+
+      expect(curve.items[0].value).toBe(900);
+      expect(curve.items[1].value).toBe(100);
+    });
+  });
 });

@@ -55,3 +55,14 @@ export class QuotesController {
     return this.procurementService.approveQuote(quoteId);
   }
 }
+
+@Controller("projects/:projectId/abc-curve")
+@UseGuards(JwtAuthGuard)
+export class AbcCurveController {
+  constructor(private readonly procurementService: ProcurementService) {}
+
+  @Get()
+  async get(@Param("projectId") projectId: string) {
+    return this.procurementService.getABCCurve(projectId);
+  }
+}
