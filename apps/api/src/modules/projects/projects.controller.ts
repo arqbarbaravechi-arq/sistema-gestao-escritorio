@@ -44,7 +44,13 @@ export class ProjectsController {
   @Post()
   async create(@Body() dto: CreateProjectDto, @Req() req: AuthenticatedRequest) {
     const organizationId = req.user!.organizationId;
-    return this.projectsService.createProject(organizationId, dto.name, dto.type, dto.templateId);
+    return this.projectsService.createProject(
+      organizationId,
+      dto.clientId,
+      dto.name,
+      dto.type,
+      dto.templateId,
+    );
   }
 
   @Get()

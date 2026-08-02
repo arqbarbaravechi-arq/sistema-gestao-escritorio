@@ -33,6 +33,7 @@ export const DEFAULT_STAGE_ORDER: StageType[] = [
 export interface ProjectRecord {
   id: string;
   organizationId: string;
+  clientId: string;
   name: string;
   type: ProjectType;
   status: ProjectStatus;
@@ -87,6 +88,7 @@ export interface OpenCycleNoteRecord {
 export interface ProjectRepository {
   createProject(data: {
     organizationId: string;
+    clientId: string;
     name: string;
     type: ProjectType;
   }): Promise<ProjectRecord>;

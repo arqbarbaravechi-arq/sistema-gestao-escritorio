@@ -23,6 +23,7 @@ interface NavItem {
 // os "em breve" apontam para uma página de placeholder honesta, sem
 // fingir que a funcionalidade já existe.
 const NAV_ITEMS: NavItem[] = [
+  { href: "/clients", label: "Clientes", icon: "👤", status: "pronto" },
   { href: "/dashboard", label: "Projetos", icon: "📁", status: "pronto" },
   { href: "/notifications", label: "Notificações", icon: "🔔", status: "pronto" },
   { href: "/obra", label: "Obra", icon: "🏗️", status: "em-breve" },

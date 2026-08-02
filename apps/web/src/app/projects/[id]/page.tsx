@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import { apiFetch, ApiError } from "@/lib/api";
-import { ProjectDetail, STAGE_LABELS, StageStatus } from "@/lib/types";
+import { ProjectDetail, STAGE_LABELS, StageStatus, Client } from "@/lib/types";
 
 const STAGE_STATUS_COLOR: Record<StageStatus, string> = {
   NAO_INICIADO: "#d1d5db",
@@ -29,6 +29,7 @@ export default function ProjectDetailPage() {
   const projectId = params.id as string;
 
   const [data, setData] = useState<ProjectDetail | null>(null);
+  const [client, setClient] = useState<Client | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -37,6 +38,13 @@ export default function ProjectDetailPage() {
     try {
       const result = await apiFetch<ProjectDetail>(`/projects/${projectId}`);
       setData(result);
+      apiFetch<Client>(`/clients/${result.project.clientId}`)
+        .then(setClient)
+        .catch(() => {
+          // Falha ao buscar o cliente não deve travar a exibição do
+          // projeto — degradação graciosa, mesma lógica já usada com
+          // templates na tela de criação de projeto.
+        });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar projeto");
     }
@@ -159,6 +167,11 @@ export default function ProjectDetailPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "0.5rem" }}>
         <div>
           <h1 style={{ fontSize: "1.4rem", margin: 0 }}>{project.name}</h1>
+          {client && (
+            <p style={{ color: "#333", fontSize: "0.85rem", margin: "0.2rem 0 0" }}>
+              Cliente: <strong>{client.name}</strong>
+            </p>
+          )}
           <p style={{ color: "#666", fontSize: "0.85rem", margin: "0.25rem 0 0" }}>
             Status: <strong>{project.status}</strong>
             {project.statusReason && ` — ${project.statusReason}`}

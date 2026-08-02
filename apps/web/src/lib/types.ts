@@ -3,9 +3,19 @@ export type ProjectStatus = "ATIVO" | "PAUSADO" | "CANCELADO" | "CONCLUIDO";
 export type StageStatus = "NAO_INICIADO" | "EM_ANDAMENTO" | "EM_REVISAO" | "APROVADO" | "ATRASADO";
 export type StageMode = "PADRAO" | "CICLO_ABERTO";
 
+export interface Client {
+  id: string;
+  organizationId: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  createdAt: string;
+}
+
 export interface Project {
   id: string;
   organizationId: string;
+  clientId: string;
   name: string;
   type: ProjectType;
   status: ProjectStatus;

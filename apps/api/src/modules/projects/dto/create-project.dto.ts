@@ -5,6 +5,10 @@ const PROJECT_TYPES = ["INTERIORES", "ARQUITETONICO", "COMERCIAL", "CONSULTORIA"
 export class CreateProjectDto {
   @IsString()
   @MinLength(1)
+  clientId!: string;
+
+  @IsString()
+  @MinLength(1)
   name!: string;
 
   @IsIn(PROJECT_TYPES)

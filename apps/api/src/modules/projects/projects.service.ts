@@ -9,6 +9,7 @@ import {
 } from "./domain/project-repository.interface";
 import { NotificationsService } from "../notifications/notifications.service";
 import { findTemplate } from "./domain/project-templates";
+import { ClientsService } from "../clients/clients.service";
 
 const MAX_REVISION_ROUNDS = 2; // CR-000 — 2 rodadas por projeto, confirmado pela sócia
 
@@ -17,17 +18,23 @@ export class ProjectsService {
   constructor(
     @Inject(PROJECT_REPOSITORY) private readonly repo: ProjectRepository,
     private readonly notifications: NotificationsService,
+    private readonly clients: ClientsService,
   ) {}
 
   // Templates de Projeto (CR-001, item 2) — templateId é opcional; sem
   // ele, o comportamento é idêntico ao de antes (etapas sem prazo).
+  // Cliente (pré-requisito do projeto): o projeto sempre pertence a um
+  // cliente já cadastrado — validado antes de criar qualquer coisa.
   async createProject(
     organizationId: string,
+    clientId: string,
     name: string,
     type: ProjectType,
     templateId?: string,
   ) {
-    const project = await this.repo.createProject({ organizationId, name, type });
+    await this.clients.assertClientBelongsToOrganization(clientId, organizationId);
+
+    const project = await this.repo.createProject({ organizationId, clientId, name, type });
     let stages = await this.repo.createStagesForProject(project.id);
 
     if (templateId) {

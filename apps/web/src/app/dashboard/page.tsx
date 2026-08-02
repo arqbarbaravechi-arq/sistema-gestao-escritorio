@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
-import { Project, PROJECT_TYPE_LABELS } from "@/lib/types";
+import { Project, PROJECT_TYPE_LABELS, Client } from "@/lib/types";
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   ATIVO: { label: "Ativo", color: "#16a34a" },
@@ -17,6 +17,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 export default function DashboardPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[] | null>(null);
+  const [clients, setClients] = useState<Client[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,7 +30,19 @@ export default function DashboardPage() {
     apiFetch<Project[]>("/projects")
       .then(setProjects)
       .catch((err) => setError(err instanceof Error ? err.message : "Erro ao carregar projetos"));
+
+    apiFetch<Client[]>("/clients")
+      .then(setClients)
+      .catch(() => {
+        // Falha ao carregar clientes não deve travar a lista de
+        // projetos — degradação graciosa, mesmo padrão já usado em
+        // outras telas do sistema.
+      });
   }, [router]);
+
+  function clientName(clientId: string) {
+    return clients.find((c) => c.id === clientId)?.name ?? null;
+  }
 
   return (
     <AppShell>
@@ -102,6 +115,9 @@ export default function DashboardPage() {
                   <div>
                     <div style={{ fontWeight: "bold" }}>{project.name}</div>
                     <div style={{ fontSize: "0.85rem", color: "#666" }}>
+                      {clientName(project.clientId) && (
+                        <span>{clientName(project.clientId)} · </span>
+                      )}
                       {PROJECT_TYPE_LABELS[project.type]}
                     </div>
                   </div>

@@ -27,12 +27,14 @@ export class InMemoryProjectRepository implements ProjectRepository {
 
   async createProject(data: {
     organizationId: string;
+    clientId: string;
     name: string;
     type: ProjectRecord["type"];
   }): Promise<ProjectRecord> {
     const project: ProjectRecord = {
       id: randomUUID(),
       organizationId: data.organizationId,
+      clientId: data.clientId,
       name: data.name,
       type: data.type,
       status: "ATIVO",

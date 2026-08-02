@@ -6,10 +6,15 @@ import { InMemoryProjectRepository } from "./infra/in-memory-project.repository"
 import { NotificationsService } from "../notifications/notifications.service";
 import { NOTIFICATION_REPOSITORY } from "../notifications/domain/notification-repository.interface";
 import { InMemoryNotificationRepository } from "../notifications/infra/in-memory-notification.repository";
+import { ClientsService } from "../clients/clients.service";
+import { CLIENT_REPOSITORY } from "../clients/domain/client-repository.interface";
+import { InMemoryClientRepository } from "../clients/infra/in-memory-client.repository";
 
 describe("ProjectsService", () => {
   let service: ProjectsService;
   let notificationsService: NotificationsService;
+  let clientOrg1Id: string;
+  let clientOrg2Id: string;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -20,16 +25,25 @@ describe("ProjectsService", () => {
         NotificationsService,
         InMemoryNotificationRepository,
         { provide: NOTIFICATION_REPOSITORY, useExisting: InMemoryNotificationRepository },
+        ClientsService,
+        InMemoryClientRepository,
+        { provide: CLIENT_REPOSITORY, useExisting: InMemoryClientRepository },
       ],
     }).compile();
 
     service = moduleRef.get(ProjectsService);
     notificationsService = moduleRef.get(NotificationsService);
+
+    const clientsService = moduleRef.get(ClientsService);
+    const clientOrg1 = await clientsService.createClient("org-1", "Cliente Teste Org1", null, null);
+    const clientOrg2 = await clientsService.createClient("org-2", "Cliente Teste Org2", null, null);
+    clientOrg1Id = clientOrg1.id;
+    clientOrg2Id = clientOrg2.id;
   });
 
   describe("criação de projeto e etapas automáticas", () => {
     it("cria um projeto vinculado à organização correta", async () => {
-      const { project } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { project } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
 
       expect(project.organizationId).toBe("org-1");
       expect(project.name).toBe("Casa Boa Vista");
@@ -37,7 +51,7 @@ describe("ProjectsService", () => {
     });
 
     it("cria automaticamente as 8 etapas padrão, na ordem correta", async () => {
-      const { stages } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { stages } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
 
       expect(stages).toHaveLength(8);
       expect(stages.map((s) => s.type)).toEqual([
@@ -54,8 +68,8 @@ describe("ProjectsService", () => {
     });
 
     it("não lista projeto de outra organização", async () => {
-      await service.createProject("org-1", "Projeto A", "INTERIORES");
-      await service.createProject("org-2", "Projeto B", "INTERIORES");
+      await service.createProject("org-1", clientOrg1Id, "Projeto A", "INTERIORES");
+      await service.createProject("org-2", clientOrg2Id, "Projeto B", "INTERIORES");
 
       const listaOrg1 = await service.listProjects("org-1");
 
@@ -192,7 +206,7 @@ describe("ProjectsService", () => {
 
   describe("rodada de revisão — CR-000 (2 por projeto, não por etapa)", () => {
     it("permite registrar a 1ª e a 2ª rodada normalmente", async () => {
-      const { project } = await service.createProject("org-1", "Apto Itacorubi", "INTERIORES");
+      const { project } = await service.createProject("org-1", clientOrg1Id, "Apto Itacorubi", "INTERIORES");
 
       const r1 = await service.addRevisionRound(project.id, "cliente", "ajuste 1");
       const r2 = await service.addRevisionRound(project.id, "cliente", "ajuste 2");
@@ -202,7 +216,7 @@ describe("ProjectsService", () => {
     });
 
     it("bloqueia a 3ª rodada e orienta a criar um orçamento (aditivo), não permite como 'rodada extra'", async () => {
-      const { project } = await service.createProject("org-1", "Apto Itacorubi", "INTERIORES");
+      const { project } = await service.createProject("org-1", clientOrg1Id, "Apto Itacorubi", "INTERIORES");
 
       await service.addRevisionRound(project.id, "cliente", "ajuste 1");
       await service.addRevisionRound(project.id, "cliente", "ajuste 2");
@@ -221,8 +235,8 @@ describe("ProjectsService", () => {
     });
 
     it("a contagem de rodadas é por PROJETO INTEIRO, não some entre projetos diferentes", async () => {
-      const { project: p1 } = await service.createProject("org-1", "Projeto 1", "INTERIORES");
-      const { project: p2 } = await service.createProject("org-1", "Projeto 2", "INTERIORES");
+      const { project: p1 } = await service.createProject("org-1", clientOrg1Id, "Projeto 1", "INTERIORES");
+      const { project: p2 } = await service.createProject("org-1", clientOrg1Id, "Projeto 2", "INTERIORES");
 
       await service.addRevisionRound(p1.id, "cliente", "ajuste");
       await service.addRevisionRound(p1.id, "cliente", "ajuste");
@@ -232,7 +246,7 @@ describe("ProjectsService", () => {
     });
 
     it("cria um orçamento/aditivo vinculado ao projeto", async () => {
-      const { project } = await service.createProject("org-1", "Apto Itacorubi", "INTERIORES");
+      const { project } = await service.createProject("org-1", clientOrg1Id, "Apto Itacorubi", "INTERIORES");
 
       const amendment = await service.createBudgetAmendment(
         project.id,
@@ -246,7 +260,7 @@ describe("ProjectsService", () => {
 
   describe("modo exceção (S1-9)", () => {
     it("permite marcar uma etapa como ciclo aberto", async () => {
-      const { stages } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { stages } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
       const stage = stages[4]; // EXECUTIVO
 
       const updated = await service.setStageMode(stage.id, "CICLO_ABERTO");
@@ -255,7 +269,7 @@ describe("ProjectsService", () => {
     });
 
     it("permite registrar interação livre em etapa que está em ciclo aberto", async () => {
-      const { stages } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { stages } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
       const stage = stages[4];
 
       await service.setStageMode(stage.id, "CICLO_ABERTO");
@@ -265,7 +279,7 @@ describe("ProjectsService", () => {
     });
 
     it("bloqueia registro de interação livre em etapa que NÃO está em ciclo aberto", async () => {
-      const { stages } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { stages } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
       const stage = stages[4]; // ainda em modo PADRAO
 
       await expect(
@@ -276,7 +290,7 @@ describe("ProjectsService", () => {
 
   describe("pausado/cancelado (S1-10)", () => {
     it("pausa um projeto exigindo motivo", async () => {
-      const { project } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { project } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
 
       const updated = await service.pauseProject(project.id, "org-1", "Cliente pediu tempo");
 
@@ -285,7 +299,7 @@ describe("ProjectsService", () => {
     });
 
     it("rejeita pausar sem informar motivo", async () => {
-      const { project } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { project } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
 
       await expect(service.pauseProject(project.id, "org-1", "")).rejects.toThrow(
         BadRequestException,
@@ -293,7 +307,7 @@ describe("ProjectsService", () => {
     });
 
     it("cancela um projeto exigindo motivo", async () => {
-      const { project } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { project } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
 
       const updated = await service.cancelProject(project.id, "org-1", "Cliente desistiu");
 
@@ -301,7 +315,7 @@ describe("ProjectsService", () => {
     });
 
     it("rejeita pausar/cancelar projeto de outra organização (isolamento multi-tenant)", async () => {
-      const { project } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { project } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
 
       await expect(
         service.pauseProject(project.id, "org-2", "Motivo qualquer"),
@@ -309,7 +323,7 @@ describe("ProjectsService", () => {
     });
 
     it("reativa um projeto pausado", async () => {
-      const { project } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { project } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
       await service.pauseProject(project.id, "org-1", "Pausa temporária");
 
       const reactivated = await service.reactivateProject(project.id, "org-1");
@@ -321,7 +335,7 @@ describe("ProjectsService", () => {
 
   describe("sub-entregas (S1-7)", () => {
     it("permite adicionar sub-entregas com responsáveis diferentes na etapa Executivo", async () => {
-      const { stages } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { stages } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
       const executivo = stages.find((s) => s.type === "EXECUTIVO")!;
 
       const d1 = await service.addDeliverable(executivo.id, "Executivo de obra", "user-vitoria", null);
@@ -338,15 +352,41 @@ describe("ProjectsService", () => {
     });
   });
 
+  describe("cliente é pré-requisito do projeto", () => {
+    it("rejeita criar projeto com cliente inexistente", async () => {
+      await expect(
+        service.createProject("org-1", "cliente-que-nao-existe", "Projeto X", "INTERIORES"),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it("rejeita criar projeto com cliente de outra organização (isolamento multi-tenant)", async () => {
+      await expect(
+        service.createProject("org-1", clientOrg2Id, "Projeto X", "INTERIORES"),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it("vincula corretamente o clientId ao projeto criado", async () => {
+      const { project } = await service.createProject(
+        "org-1",
+        clientOrg1Id,
+        "Casa Boa Vista",
+        "INTERIORES",
+      );
+
+      expect(project.clientId).toBe(clientOrg1Id);
+    });
+  });
+
   describe("Templates de Projeto (CR-001, item 2)", () => {
     it("cria projeto sem template normalmente (sem prazos automáticos)", async () => {
-      const { stages } = await service.createProject("org-1", "Sem Template", "INTERIORES");
+      const { stages } = await service.createProject("org-1", clientOrg1Id, "Sem Template", "INTERIORES");
       expect(stages.every((s) => s.dueDate === null)).toBe(true);
     });
 
     it("aplica prazos automáticos por etapa quando um template é informado", async () => {
       const { project, stages } = await service.createProject(
         "org-1",
+        clientOrg1Id,
         "Com Template",
         "INTERIORES",
         "interiores-padrao",
@@ -365,13 +405,14 @@ describe("ProjectsService", () => {
 
     it("rejeita template inexistente", async () => {
       await expect(
-        service.createProject("org-1", "Projeto X", "INTERIORES", "template-que-nao-existe"),
+        service.createProject("org-1", clientOrg1Id, "Projeto X", "INTERIORES", "template-que-nao-existe"),
       ).rejects.toThrow(BadRequestException);
     });
 
     it("prazos de etapas posteriores são sempre maiores ou iguais aos anteriores (template consistente)", async () => {
       const { stages } = await service.createProject(
         "org-1",
+        clientOrg1Id,
         "Consistencia",
         "ARQUITETONICO",
         "arquitetonico-residencial",
@@ -388,6 +429,7 @@ describe("ProjectsService", () => {
     it("template 'consultoria-rapida' não define prazo para etapas que não fazem parte do fluxo enxuto (ex: OBRA)", async () => {
       const { stages } = await service.createProject(
         "org-1",
+        clientOrg1Id,
         "Consultoria X",
         "CONSULTORIA",
         "consultoria-rapida",
@@ -400,15 +442,15 @@ describe("ProjectsService", () => {
 
   describe("Portal do Cliente (CR-001, item 1)", () => {
     it("gera um token de acesso único para cada projeto criado", async () => {
-      const { project: p1 } = await service.createProject("org-1", "Projeto 1", "INTERIORES");
-      const { project: p2 } = await service.createProject("org-1", "Projeto 2", "INTERIORES");
+      const { project: p1 } = await service.createProject("org-1", clientOrg1Id, "Projeto 1", "INTERIORES");
+      const { project: p2 } = await service.createProject("org-1", clientOrg1Id, "Projeto 2", "INTERIORES");
 
       expect(p1.clientAccessToken).toBeDefined();
       expect(p1.clientAccessToken).not.toBe(p2.clientAccessToken);
     });
 
     it("retorna a visão pública do projeto a partir do token, sem exigir organização", async () => {
-      const { project } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { project } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
 
       const publicView = await service.getProjectForClient(project.clientAccessToken);
 
@@ -417,7 +459,7 @@ describe("ProjectsService", () => {
     });
 
     it("a visão pública NÃO expõe dados sensíveis (id interno, organizationId, motivo de pausa)", async () => {
-      const { project } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { project } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
       await service.pauseProject(project.id, "org-1", "Motivo confidencial do cliente concorrente");
 
       const publicView = await service.getProjectForClient(project.clientAccessToken);
@@ -436,7 +478,7 @@ describe("ProjectsService", () => {
 
   describe("integração com Notificações (Sprint 2)", () => {
     it("gera notificação RODADAS_ESGOTADAS quando a 3ª rodada é bloqueada", async () => {
-      const { project } = await service.createProject("org-1", "Apto Itacorubi", "INTERIORES");
+      const { project } = await service.createProject("org-1", clientOrg1Id, "Apto Itacorubi", "INTERIORES");
 
       await service.addRevisionRound(project.id, "user-socia", "ajuste 1");
       await service.addRevisionRound(project.id, "user-socia", "ajuste 2");
@@ -455,7 +497,7 @@ describe("ProjectsService", () => {
     });
 
     it("NÃO gera notificação quando a rodada é registrada dentro do limite (1ª ou 2ª)", async () => {
-      const { project } = await service.createProject("org-1", "Apto Itacorubi", "INTERIORES");
+      const { project } = await service.createProject("org-1", clientOrg1Id, "Apto Itacorubi", "INTERIORES");
 
       await service.addRevisionRound(project.id, "user-socia", "ajuste 1");
 
@@ -464,7 +506,7 @@ describe("ProjectsService", () => {
     });
 
     it("checkLateStagesAndNotify gera notificação ETAPA_ATRASADA para etapa vencida", async () => {
-      const { project, stages } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { project, stages } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
       const ontem = new Date(Date.now() - 24 * 60 * 60 * 1000);
       await service.updateStageStatus(stages[0].id, "EM_ANDAMENTO", ontem);
 
@@ -476,7 +518,7 @@ describe("ProjectsService", () => {
     });
 
     it("checkLateStagesAndNotify NÃO duplica notificação ao rodar duas vezes para a mesma etapa", async () => {
-      const { stages } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { stages } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
       const ontem = new Date(Date.now() - 24 * 60 * 60 * 1000);
       await service.updateStageStatus(stages[0].id, "EM_ANDAMENTO", ontem);
 
@@ -487,7 +529,7 @@ describe("ProjectsService", () => {
     });
 
     it("checkLateStagesAndNotify NÃO notifica etapa de projeto pausado", async () => {
-      const { project, stages } = await service.createProject("org-1", "Casa Boa Vista", "INTERIORES");
+      const { project, stages } = await service.createProject("org-1", clientOrg1Id, "Casa Boa Vista", "INTERIORES");
       const ontem = new Date(Date.now() - 24 * 60 * 60 * 1000);
       await service.updateStageStatus(stages[0].id, "EM_ANDAMENTO", ontem);
       await service.pauseProject(project.id, "org-1", "Cliente pediu tempo");
