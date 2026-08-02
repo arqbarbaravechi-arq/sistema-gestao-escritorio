@@ -27,8 +27,8 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
     stageDurations: {
       BRIEFING: 3,
       MEDICAO: 7,
-      ESTUDO_PRELIMINAR: 12,
-      LAYOUT: 18,
+      LAYOUT: 12,
+      ESTUDO_PRELIMINAR: 18,
       EXECUTIVO: 28,
       ORCAMENTO: 32,
       OBRA: 35,
@@ -42,8 +42,8 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
     stageDurations: {
       BRIEFING: 5,
       MEDICAO: 10,
-      ESTUDO_PRELIMINAR: 15,
-      LAYOUT: 25,
+      LAYOUT: 15,
+      ESTUDO_PRELIMINAR: 25,
       EXECUTIVO: 40,
       ORCAMENTO: 45,
       OBRA: 50,

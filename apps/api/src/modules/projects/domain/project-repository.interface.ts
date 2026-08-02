@@ -22,8 +22,8 @@ export type StageMode = "PADRAO" | "CICLO_ABERTO";
 export const DEFAULT_STAGE_ORDER: StageType[] = [
   "BRIEFING",
   "MEDICAO",
-  "ESTUDO_PRELIMINAR",
   "LAYOUT",
+  "ESTUDO_PRELIMINAR",
   "EXECUTIVO",
   "ORCAMENTO",
   "OBRA",

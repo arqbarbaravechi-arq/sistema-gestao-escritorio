@@ -77,8 +77,8 @@ describe("ProjectsService", () => {
       expect(stages.map((s) => s.type)).toEqual([
         "BRIEFING",
         "MEDICAO",
-        "ESTUDO_PRELIMINAR",
         "LAYOUT",
+        "ESTUDO_PRELIMINAR",
         "EXECUTIVO",
         "ORCAMENTO",
         "OBRA",
