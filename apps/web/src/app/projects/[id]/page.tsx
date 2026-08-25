@@ -7,6 +7,12 @@ import AppShell from "@/components/AppShell";
 import { apiFetch, ApiError } from "@/lib/api";
 import { ProjectDetail, STAGE_LABELS, StageStatus, Client } from "@/lib/types";
 
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+}
+
 interface TimeEntry {
   id: string;
   projectId: string;
@@ -93,6 +99,7 @@ export default function ProjectDetailPage() {
   const [timerTotalSeconds, setTimerTotalSeconds] = useState(0);
   const [elapsedDisplay, setElapsedDisplay] = useState("00:00:00");
   const [timerDescription, setTimerDescription] = useState("");
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
   const load = useCallback(async () => {
     try {
@@ -129,6 +136,9 @@ export default function ProjectDetailPage() {
         .then((r) => {
           if (r && r.projectId === projectId) setRunningTimer(r);
         })
+        .catch(() => {});
+      apiFetch<TeamMember[]>("/auth/users")
+        .then(setTeamMembers)
         .catch(() => {});
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar projeto");
@@ -330,6 +340,22 @@ export default function ProjectDetailPage() {
     const h = Math.floor(totalSeconds / 3600);
     const m = Math.floor((totalSeconds % 3600) / 60);
     return `${h}h ${m}min`;
+  }
+
+  async function assignResponsible(stageId: string, responsibleId: string) {
+    setBusy(true);
+    setActionMessage(null);
+    try {
+      await apiFetch(`/projects/${projectId}/stages/${stageId}/responsible`, {
+        method: "PATCH",
+        body: JSON.stringify({ responsibleId }),
+      });
+      await load();
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : "Erro ao atribuir responsável");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function addSiteVisit(e: React.FormEvent) {
@@ -859,18 +885,37 @@ export default function ProjectDetailPage() {
               </div>
             </div>
 
-            <select
-              value={stage.status}
-              onChange={(e) => updateStageStatus(stage.id, e.target.value as StageStatus)}
-              disabled={busy}
-              style={{ padding: "0.3rem", fontSize: "0.85rem" }}
-            >
-              {Object.keys(STAGE_STATUS_LABEL).map((s) => (
-                <option key={s} value={s}>
-                  {STAGE_STATUS_LABEL[s as StageStatus]}
+            <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+              <select
+                value={stage.responsibleId ?? ""}
+                onChange={(e) => assignResponsible(stage.id, e.target.value)}
+                disabled={busy || teamMembers.length === 0}
+                style={{ padding: "0.3rem", fontSize: "0.8rem" }}
+                title="Responsável"
+              >
+                <option value="" disabled>
+                  Responsável
                 </option>
-              ))}
-            </select>
+                {teamMembers.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={stage.status}
+                onChange={(e) => updateStageStatus(stage.id, e.target.value as StageStatus)}
+                disabled={busy}
+                style={{ padding: "0.3rem", fontSize: "0.85rem" }}
+              >
+                {Object.keys(STAGE_STATUS_LABEL).map((s) => (
+                  <option key={s} value={s}>
+                    {STAGE_STATUS_LABEL[s as StageStatus]}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         ))}
       </div>

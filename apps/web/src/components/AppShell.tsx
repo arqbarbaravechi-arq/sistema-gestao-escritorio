@@ -35,7 +35,7 @@ const GERENCIADOR: DropdownNavItem = {
     { href: "/obra", label: "Obra", ready: true },
     { href: "/compras", label: "Gestão de Compras", ready: true },
     { href: "/curva-abc", label: "Curva ABC de Custos", ready: true },
-    { href: "/biblioteca", label: "Biblioteca", ready: false },
+    { href: "/biblioteca", label: "Biblioteca", ready: true },
     { href: "/templates", label: "Templates de Projeto", ready: true },
   ],
 };
@@ -43,9 +43,9 @@ const GERENCIADOR: DropdownNavItem = {
 const ADMINISTRATIVO: DropdownNavItem = {
   label: "Administrativo",
   items: [
-    { href: "/financeiro", label: "Financeiro", ready: false },
+    { href: "/financeiro", label: "Financeiro", ready: true },
     { href: "/pagamentos", label: "Pagamento Integrado", ready: true },
-    { href: "/equipe", label: "Equipe", ready: false },
+    { href: "/equipe", label: "Equipe", ready: true },
     { href: "/portal-cliente", label: "Portal do Cliente", ready: true },
     { href: "/app-mobile", label: "App no Celular", ready: true },
   ],
