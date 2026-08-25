@@ -44,4 +44,25 @@ export class BillingService {
     }
     return this.repo.updateStatus(id, "CANCELADO", null);
   }
+
+  // ── Financeiro (visão somente-leitura) ──
+  async getFinancialSummary(organizationId: string) {
+    const requests = await this.repo.listByOrganization(organizationId);
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const totalPending = requests
+      .filter((r) => r.status === "PENDENTE")
+      .reduce((sum, r) => sum + r.value, 0);
+
+    const totalPaidThisMonth = requests
+      .filter((r) => r.status === "PAGO" && r.paidAt && r.paidAt >= startOfMonth)
+      .reduce((sum, r) => sum + r.value, 0);
+
+    const totalOverdue = requests
+      .filter((r) => r.status === "PENDENTE" && r.dueDate && r.dueDate.getTime() < now.getTime())
+      .reduce((sum, r) => sum + r.value, 0);
+
+    return { totalPending, totalPaidThisMonth, totalOverdue, requests };
+  }
 }

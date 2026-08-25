@@ -42,6 +42,13 @@ export class InMemoryPaymentRequestRepository implements PaymentRequestRepositor
       .reverse();
   }
 
+  async listByOrganization(organizationId: string): Promise<PaymentRequestRecord[]> {
+    return this.requests
+      .filter((r) => r.organizationId === organizationId)
+      .slice()
+      .reverse();
+  }
+
   async updateStatus(
     id: string,
     status: PaymentRequestStatus,

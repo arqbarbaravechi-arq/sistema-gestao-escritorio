@@ -38,3 +38,14 @@ export class BillingController {
     return this.billingService.cancel(requestId);
   }
 }
+
+@Controller("financial-summary")
+@UseGuards(JwtAuthGuard)
+export class FinancialSummaryController {
+  constructor(private readonly billingService: BillingService) {}
+
+  @Get()
+  async get(@Req() req: AuthenticatedRequest) {
+    return this.billingService.getFinancialSummary(req.user!.organizationId);
+  }
+}

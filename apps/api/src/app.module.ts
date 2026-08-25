@@ -8,9 +8,11 @@ import { ProcurementModule } from "./modules/procurement/procurement.module";
 import { CrmModule } from "./modules/crm/crm.module";
 import { BillingModule } from "./modules/billing/billing.module";
 import { SiteVisitsModule } from "./modules/site-visits/site-visits.module";
+import { LibraryModule } from "./modules/library/library.module";
+import { TeamModule } from "./modules/team/team.module";
 
 // Módulo raiz. Fase 0 completa. CR-001: 7 de 8 itens prontos (Agentes
-// de IA em standby). Obra (visitas técnicas) iniciando Fase 2.
+// de IA em standby). Fase 2/3: Obra, Biblioteca, Financeiro, Equipe.
 @Module({
   imports: [
     AuthModule,
@@ -21,6 +23,8 @@ import { SiteVisitsModule } from "./modules/site-visits/site-visits.module";
     CrmModule,
     BillingModule,
     SiteVisitsModule,
+    LibraryModule,
+    TeamModule,
   ],
   controllers: [HealthController],
   providers: [],

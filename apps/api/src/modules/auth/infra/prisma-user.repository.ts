@@ -47,4 +47,12 @@ export class PrismaUserRepository implements UserRepository {
     //   active: user.active,
     // };
   }
+
+  async listByOrganization(_organizationId: string): Promise<UserRecord[]> {
+    throw new Error(
+      "PrismaUserRepository não está ativo. Ver comentário no topo deste arquivo.",
+    );
+    // Implementação pretendida:
+    // return this.prisma.user.findMany({ where: { organizationId, active: true } });
+  }
 }

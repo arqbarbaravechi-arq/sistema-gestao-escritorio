@@ -15,6 +15,7 @@ export interface UserRecord {
 
 export interface UserRepository {
   findByEmail(email: string): Promise<UserRecord | null>;
+  listByOrganization(organizationId: string): Promise<UserRecord[]>;
 }
 
 export const USER_REPOSITORY = Symbol("USER_REPOSITORY");

@@ -85,6 +85,16 @@ export class ProjectsController {
     return this.projectsService.setStageMode(stageId, mode);
   }
 
+  // Atribuição de responsável — alimenta o painel de carga de trabalho
+  // (módulo Equipe).
+  @Patch(":projectId/stages/:stageId/responsible")
+  async setStageResponsible(
+    @Param("stageId") stageId: string,
+    @Body("responsibleId") responsibleId: string,
+  ) {
+    return this.projectsService.setStageResponsible(stageId, responsibleId);
+  }
+
   @Post(":projectId/stages/:stageId/open-cycle-notes")
   async addOpenCycleNote(
     @Param("stageId") stageId: string,

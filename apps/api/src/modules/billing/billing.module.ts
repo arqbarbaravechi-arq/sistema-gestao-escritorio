@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
-import { BillingController } from "./billing.controller";
+import { BillingController, FinancialSummaryController } from "./billing.controller";
 import { BillingService } from "./billing.service";
 import { PAYMENT_REQUEST_REPOSITORY } from "./domain/payment-request-repository.interface";
 import { InMemoryPaymentRequestRepository } from "./infra/in-memory-payment-request.repository";
@@ -12,7 +12,7 @@ import { InMemoryPaymentRequestRepository } from "./infra/in-memory-payment-requ
       signOptions: { expiresIn: "8h" },
     }),
   ],
-  controllers: [BillingController],
+  controllers: [BillingController, FinancialSummaryController],
   providers: [
     BillingService,
     InMemoryPaymentRequestRepository,

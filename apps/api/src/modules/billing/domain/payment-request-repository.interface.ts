@@ -30,6 +30,7 @@ export interface PaymentRequestRepository {
 
   findById(id: string): Promise<PaymentRequestRecord | null>;
   listByProject(projectId: string): Promise<PaymentRequestRecord[]>;
+  listByOrganization(organizationId: string): Promise<PaymentRequestRecord[]>;
   updateStatus(
     id: string,
     status: PaymentRequestStatus,

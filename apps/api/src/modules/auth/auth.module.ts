@@ -32,6 +32,6 @@ import { UserSeeder } from "./infra/user-seeder";
     // { provide: USER_REPOSITORY, useClass: PrismaUserRepository }
     { provide: USER_REPOSITORY, useExisting: InMemoryUserRepository },
   ],
-  exports: [JwtAuthGuard, RolesGuard],
+  exports: [JwtAuthGuard, RolesGuard, USER_REPOSITORY],
 })
 export class AuthModule {}

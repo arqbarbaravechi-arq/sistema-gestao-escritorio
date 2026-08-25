@@ -27,5 +27,6 @@ import { ClientsModule } from "../clients/clients.module";
     // Trocar para PrismaProjectRepository quando validado localmente.
     { provide: PROJECT_REPOSITORY, useExisting: InMemoryProjectRepository },
   ],
+  exports: [ProjectsService],
 })
 export class ProjectsModule {}

@@ -85,4 +85,40 @@ describe("BillingService", () => {
     await expect(service.markAsPaid("id-que-nao-existe")).rejects.toThrow(NotFoundException);
     await expect(service.cancel("id-que-nao-existe")).rejects.toThrow(NotFoundException);
   });
+
+  describe("Financeiro (resumo somente-leitura)", () => {
+    it("soma corretamente pendente, pago no mês e em atraso", async () => {
+      const r1 = await service.createPaymentRequest("org-1", "project-1", "Parcela 1", 5000, null);
+      await service.createPaymentRequest("org-1", "project-1", "Parcela 2", 3000, null);
+
+      await service.markAsPaid(r1.id);
+
+      const ontem = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      await service.createPaymentRequest("org-1", "project-1", "Parcela vencida", 1000, ontem);
+
+      const summary = await service.getFinancialSummary("org-1");
+
+      expect(summary.totalPaidThisMonth).toBe(5000);
+      expect(summary.totalPending).toBe(3000 + 1000);
+      expect(summary.totalOverdue).toBe(1000);
+    });
+
+    it("não mistura dados de organizações diferentes no resumo", async () => {
+      await service.createPaymentRequest("org-1", "project-1", "Parcela org-1", 1000, null);
+      await service.createPaymentRequest("org-2", "project-2", "Parcela org-2", 9000, null);
+
+      const summary = await service.getFinancialSummary("org-1");
+
+      expect(summary.totalPending).toBe(1000);
+      expect(summary.requests).toHaveLength(1);
+    });
+
+    it("retorna resumo zerado quando não há nenhuma cobrança", async () => {
+      const summary = await service.getFinancialSummary("org-sem-cobrancas");
+
+      expect(summary.totalPending).toBe(0);
+      expect(summary.totalPaidThisMonth).toBe(0);
+      expect(summary.totalOverdue).toBe(0);
+    });
+  });
 });
