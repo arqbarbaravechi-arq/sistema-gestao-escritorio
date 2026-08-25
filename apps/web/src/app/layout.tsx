@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Sistema de Gestão — Escritório de Arquitetura",
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#111111",
+  themeColor: "#e66aca",
   width: "device-width",
   initialScale: 1,
 };

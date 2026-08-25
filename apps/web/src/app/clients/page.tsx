@@ -9,6 +9,7 @@ import { Client } from "@/lib/types";
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     apiFetch<Client[]>("/clients")
@@ -16,87 +17,100 @@ export default function ClientsPage() {
       .catch((err) => setError(err instanceof Error ? err.message : "Erro ao carregar"));
   }, []);
 
+  const filtered = (clients ?? []).filter((c) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      c.name.toLowerCase().includes(q) ||
+      (c.email?.toLowerCase().includes(q) ?? false) ||
+      (c.phone?.toLowerCase().includes(q) ?? false)
+    );
+  });
+
   return (
     <AppShell>
-      <div style={{ padding: "2rem", maxWidth: "600px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h1 style={{ fontSize: "1.3rem", margin: 0 }}>Clientes</h1>
-          <Link
-            href="/clients/new"
+      <div style={{ padding: "2rem 2.5rem", maxWidth: "900px" }}>
+        <div style={{ position: "relative" }}>
+          <span
             style={{
-              background: "#111",
-              color: "#fff",
-              padding: "0.5rem 1rem",
-              borderRadius: "4px",
-              textDecoration: "none",
-              fontSize: "0.9rem",
+              position: "absolute",
+              left: "1rem",
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "var(--color-text-muted)",
             }}
           >
-            + Novo cliente
-          </Link>
+            🔍
+          </span>
+          <input
+            className="sga-search"
+            placeholder="Buscar cliente..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-        <p style={{ color: "#666", marginTop: "0.5rem", fontSize: "0.85rem" }}>
-          Todo projeto precisa estar vinculado a um cliente já cadastrado aqui.
-        </p>
 
-        {error && <p style={{ color: "#c0392b", marginTop: "1rem" }}>{error}</p>}
+        {error && <p style={{ color: "#c0392b", marginTop: "1.5rem" }}>{error}</p>}
 
         {!error && clients === null && (
-          <p style={{ color: "#666", marginTop: "1rem" }}>Carregando...</p>
+          <p style={{ color: "var(--color-text-secondary)", marginTop: "1.5rem" }}>Carregando...</p>
         )}
 
         {!error && clients !== null && clients.length === 0 && (
           <div
-            style={{
-              marginTop: "1.5rem",
-              padding: "2rem",
-              border: "1px dashed #ccc",
-              borderRadius: "8px",
-              textAlign: "center",
-              color: "#666",
-            }}
+            className="sga-card"
+            style={{ marginTop: "1.5rem", textAlign: "center", color: "var(--color-text-secondary)" }}
           >
             <p>Nenhum cliente cadastrado ainda.</p>
-            <Link href="/clients/new" style={{ color: "#111", fontWeight: "bold" }}>
+            <Link href="/clients/new" style={{ color: "var(--color-primary)", fontWeight: 700 }}>
               + Cadastrar o primeiro cliente
             </Link>
           </div>
         )}
 
         {!error && clients !== null && clients.length > 0 && (
-          <div style={{ marginTop: "1rem" }}>
-            {clients.map((c) => (
-              <div
-                key={c.id}
-                style={{
-                  padding: "0.9rem 1rem",
-                  border: "1px solid #e5e5e5",
-                  borderRadius: "8px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                <div style={{ fontWeight: "bold" }}>{c.name}</div>
-                <div style={{ fontSize: "0.8rem", color: "#666", marginTop: "0.2rem" }}>
-                  {c.email && <span>{c.email}</span>}
-                  {c.email && c.phone && <span> · </span>}
-                  {c.phone && <span>{c.phone}</span>}
-                  {!c.email && !c.phone && <span>Sem contato cadastrado</span>}
-                </div>
-                {c.cpf && (
-                  <div style={{ fontSize: "0.75rem", color: "#999", marginTop: "0.15rem" }}>
-                    CPF: {c.cpf}
-                  </div>
-                )}
-                {c.address && (
-                  <div style={{ fontSize: "0.75rem", color: "#999", marginTop: "0.15rem" }}>
-                    📍 {c.address}
-                  </div>
-                )}
+          <div style={{ marginTop: "1.5rem" }}>
+            <div
+              style={{
+                display: "flex",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                color: "var(--color-text-secondary)",
+                padding: "0 0.5rem 0.5rem",
+                borderBottom: "1px solid var(--color-border)",
+              }}
+            >
+              <span style={{ flex: "0 0 32px" }}></span>
+              <span style={{ flex: 2 }}>Nome</span>
+              <span style={{ flex: 2 }}>E-mail</span>
+              <span style={{ flex: 1 }}>Telefone</span>
+            </div>
+
+            {filtered.map((c) => (
+              <div key={c.id} className="sga-row">
+                <span style={{ flex: "0 0 32px", fontSize: "1.1rem" }}>👤</span>
+                <span style={{ flex: 2, fontWeight: 600 }}>{c.name}</span>
+                <span style={{ flex: 2, color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>
+                  {c.email ?? "—"}
+                </span>
+                <span style={{ flex: 1, color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>
+                  {c.phone ?? "—"}
+                </span>
               </div>
             ))}
+
+            {filtered.length === 0 && (
+              <p style={{ color: "var(--color-text-secondary)", padding: "1rem 0.5rem" }}>
+                Nenhum cliente encontrado para &quot;{search}&quot;.
+              </p>
+            )}
           </div>
         )}
       </div>
+
+      <Link href="/clients/new" className="sga-fab" title="Novo cliente">
+        +
+      </Link>
     </AppShell>
   );
 }

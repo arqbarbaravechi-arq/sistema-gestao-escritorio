@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface User {
   id: string;
@@ -12,39 +12,54 @@ interface User {
   role: string;
 }
 
-interface NavItem {
+interface SimpleNavItem {
   href: string;
   label: string;
-  icon: string;
-  status: "pronto" | "em-breve";
 }
 
-// Todos os módulos já aprovados — os "prontos" apontam para telas reais,
-// os "em breve" apontam para uma página de placeholder honesta, sem
-// fingir que a funcionalidade já existe.
-const NAV_ITEMS: NavItem[] = [
-  { href: "/clients", label: "Clientes", icon: "👤", status: "pronto" },
-  { href: "/dashboard", label: "Projetos", icon: "📁", status: "pronto" },
-  { href: "/notifications", label: "Notificações", icon: "🔔", status: "pronto" },
-  { href: "/obra", label: "Obra", icon: "🏗️", status: "pronto" },
-  { href: "/fornecedores", label: "Fornecedores", icon: "🧾", status: "em-breve" },
-  { href: "/financeiro", label: "Financeiro", icon: "💰", status: "em-breve" },
-  { href: "/biblioteca", label: "Biblioteca", icon: "📚", status: "em-breve" },
-  { href: "/equipe", label: "Equipe", icon: "👥", status: "em-breve" },
-  { href: "/portal-cliente", label: "Portal do Cliente", icon: "🔑", status: "pronto" },
-  { href: "/templates", label: "Templates de Projeto", icon: "📐", status: "pronto" },
-  { href: "/compras", label: "Gestão de Compras", icon: "🛒", status: "pronto" },
-  { href: "/curva-abc", label: "Curva ABC de Custos", icon: "📊", status: "pronto" },
-  { href: "/crm", label: "CRM de Vendas", icon: "📇", status: "pronto" },
-  { href: "/app-mobile", label: "App no Celular", icon: "📲", status: "pronto" },
-  { href: "/pagamentos", label: "Pagamento Integrado", icon: "💳", status: "pronto" },
-  { href: "/agentes-ia", label: "Agentes de IA", icon: "🤖", status: "em-breve" },
+interface DropdownNavItem {
+  label: string;
+  items: (SimpleNavItem & { ready: boolean })[];
+}
+
+const MAIN_ITEMS: SimpleNavItem[] = [
+  { href: "/dashboard", label: "Projetos" },
+  { href: "/clients", label: "Clientes" },
+  { href: "/crm", label: "CRM" },
+  { href: "/notifications", label: "Notificações" },
 ];
+
+const GERENCIADOR: DropdownNavItem = {
+  label: "Gerenciador",
+  items: [
+    { href: "/obra", label: "Obra", ready: true },
+    { href: "/compras", label: "Gestão de Compras", ready: true },
+    { href: "/curva-abc", label: "Curva ABC de Custos", ready: true },
+    { href: "/biblioteca", label: "Biblioteca", ready: false },
+    { href: "/templates", label: "Templates de Projeto", ready: true },
+  ],
+};
+
+const ADMINISTRATIVO: DropdownNavItem = {
+  label: "Administrativo",
+  items: [
+    { href: "/financeiro", label: "Financeiro", ready: false },
+    { href: "/pagamentos", label: "Pagamento Integrado", ready: true },
+    { href: "/equipe", label: "Equipe", ready: false },
+    { href: "/portal-cliente", label: "Portal do Cliente", ready: true },
+    { href: "/app-mobile", label: "App no Celular", ready: true },
+  ],
+};
+
+const DROPDOWNS = [GERENCIADOR, ADMINISTRATIVO];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -55,97 +70,150 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     setUser(JSON.parse(storedUser));
   }, [router]);
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   function handleLogout() {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
     router.push("/login");
   }
 
+  function isDropdownActive(dropdown: DropdownNavItem) {
+    return dropdown.items.some((i) => i.href === pathname);
+  }
+
   if (!user) return null;
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", fontFamily: "sans-serif" }}>
-      {/* Menu lateral */}
-      <aside
-        style={{
-          width: "240px",
-          borderRight: "1px solid #e5e5e5",
-          padding: "1.5rem 1rem",
-          flexShrink: 0,
-        }}
-      >
-        <div style={{ marginBottom: "1.5rem", padding: "0 0.5rem" }}>
-          <div style={{ fontWeight: "bold", fontSize: "0.95rem" }}>Sistema de Gestão</div>
-          <div style={{ fontSize: "0.75rem", color: "#999" }}>Escritório de Arquitetura</div>
+    <div style={{ minHeight: "100vh" }}>
+      <nav className="sga-nav" ref={navRef}>
+        <Link href="/dashboard" className="sga-nav-logo">
+          <span className="sga-nav-logo-mark" />
+          <span className="sga-nav-logo-text">Sistema de Gestão</span>
+        </Link>
+
+        <div className="sga-nav-items" data-desktop-nav>
+          {MAIN_ITEMS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`sga-nav-item ${pathname === item.href ? "sga-nav-item-active" : ""}`}
+            >
+              {item.label}
+            </Link>
+          ))}
+
+          {DROPDOWNS.map((dropdown) => (
+            <div key={dropdown.label} style={{ position: "relative", height: "100%" }}>
+              <button
+                className={`sga-nav-item ${isDropdownActive(dropdown) ? "sga-nav-item-active" : ""}`}
+                onClick={() =>
+                  setOpenDropdown(openDropdown === dropdown.label ? null : dropdown.label)
+                }
+              >
+                {dropdown.label}
+              </button>
+              {openDropdown === dropdown.label && (
+                <div className="sga-dropdown">
+                  {dropdown.items.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="sga-dropdown-item"
+                      onClick={() => setOpenDropdown(null)}
+                    >
+                      {item.label}
+                      {!item.ready && <span className="sga-dropdown-item-badge">em breve</span>}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
-        <nav>
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href;
-            const isReady = item.status === "pronto";
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "0.5rem 0.6rem",
-                  borderRadius: "6px",
-                  marginBottom: "0.15rem",
-                  textDecoration: "none",
-                  color: isActive ? "#111" : isReady ? "#333" : "#aaa",
-                  background: isActive ? "#f3f4f6" : "transparent",
-                  fontSize: "0.88rem",
-                  fontWeight: isActive ? 600 : 400,
-                }}
-              >
-                <span>
-                  <span style={{ marginRight: "0.5rem" }}>{item.icon}</span>
-                  {item.label}
-                </span>
-                {!isReady && (
-                  <span
-                    style={{
-                      fontSize: "0.62rem",
-                      color: "#c2410c",
-                      background: "#ffedd5",
-                      borderRadius: "999px",
-                      padding: "0.1rem 0.4rem",
-                    }}
-                  >
-                    em breve
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid #eee" }}>
-          <div style={{ fontSize: "0.8rem", color: "#666", padding: "0 0.5rem" }}>{user.name}</div>
+        <div className="sga-nav-icons">
+          <Link href="/notifications" className="sga-nav-icon-btn" title="Notificações">
+            🔔
+          </Link>
           <button
+            className="sga-nav-icon-btn"
+            title={user.name}
             onClick={handleLogout}
             style={{
-              marginTop: "0.5rem",
-              width: "100%",
-              background: "none",
-              border: "1px solid #ccc",
-              borderRadius: "6px",
-              padding: "0.4rem",
               fontSize: "0.8rem",
-              cursor: "pointer",
+              fontWeight: 700,
+              color: "#fff",
+              background: "var(--color-primary)",
             }}
+          >
+            {user.name.charAt(0).toUpperCase()}
+          </button>
+          <button
+            className="sga-nav-icon-btn"
+            data-mobile-toggle
+            onClick={() => setMobileOpen(!mobileOpen)}
+            style={{ display: "none" }}
+          >
+            ☰
+          </button>
+        </div>
+      </nav>
+
+      {mobileOpen && (
+        <div
+          data-mobile-menu
+          style={{
+            borderBottom: "1px solid var(--color-border)",
+            padding: "0.5rem 1rem 1rem",
+            background: "#fff",
+          }}
+        >
+          {[...MAIN_ITEMS, ...DROPDOWNS.flatMap((d) => d.items)].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setMobileOpen(false)}
+              style={{
+                display: "block",
+                padding: "0.6rem 0.3rem",
+                fontSize: "0.9rem",
+                color:
+                  pathname === item.href ? "var(--color-text)" : "var(--color-text-secondary)",
+                fontWeight: pathname === item.href ? 700 : 400,
+                textDecoration: "none",
+                borderBottom: "1px solid var(--color-bg-subtle)",
+              }}
+            >
+              {item.label}
+            </Link>
+          ))}
+          <button
+            onClick={handleLogout}
+            className="sga-btn sga-btn-secondary"
+            style={{ marginTop: "0.75rem", width: "100%" }}
           >
             Sair
           </button>
         </div>
-      </aside>
+      )}
 
-      {/* Conteúdo da página */}
-      <main style={{ flex: 1, minWidth: 0 }}>{children}</main>
+      <main>{children}</main>
+
+      <style>{`
+        @media (max-width: 860px) {
+          [data-desktop-nav] { display: none !important; }
+          [data-mobile-toggle] { display: flex !important; }
+        }
+      `}</style>
     </div>
   );
 }

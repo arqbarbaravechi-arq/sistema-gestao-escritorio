@@ -7,11 +7,11 @@ import AppShell from "@/components/AppShell";
 import { apiFetch } from "@/lib/api";
 import { Project, PROJECT_TYPE_LABELS, Client } from "@/lib/types";
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  ATIVO: { label: "Ativo", color: "#16a34a" },
-  PAUSADO: { label: "Pausado", color: "#d97706" },
-  CANCELADO: { label: "Cancelado", color: "#dc2626" },
-  CONCLUIDO: { label: "Concluído", color: "#6b7280" },
+const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
+  ATIVO: { label: "Ativo", color: "#16a34a", bg: "#f0fdf4" },
+  PAUSADO: { label: "Pausado", color: "#d97706", bg: "#fffbeb" },
+  CANCELADO: { label: "Cancelado", color: "#dc2626", bg: "#fef2f2" },
+  CONCLUIDO: { label: "Concluído", color: "#6b7280", bg: "#f9fafb" },
 };
 
 export default function DashboardPage() {
@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [projects, setProjects] = useState<Project[] | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -33,111 +34,126 @@ export default function DashboardPage() {
 
     apiFetch<Client[]>("/clients")
       .then(setClients)
-      .catch(() => {
-        // Falha ao carregar clientes não deve travar a lista de
-        // projetos — degradação graciosa, mesmo padrão já usado em
-        // outras telas do sistema.
-      });
+      .catch(() => {});
   }, [router]);
 
   function clientName(clientId: string) {
     return clients.find((c) => c.id === clientId)?.name ?? null;
   }
 
+  const filtered = (projects ?? []).filter((p) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      p.name.toLowerCase().includes(q) ||
+      (clientName(p.clientId)?.toLowerCase().includes(q) ?? false)
+    );
+  });
+
   return (
     <AppShell>
-      <div style={{ padding: "2rem", maxWidth: "720px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h1 style={{ fontSize: "1.3rem", margin: 0 }}>Projetos</h1>
-          <Link
-            href="/projects/new"
+      <div style={{ padding: "2rem 2.5rem", maxWidth: "900px" }}>
+        <div style={{ position: "relative" }}>
+          <span
             style={{
-              background: "#111",
-              color: "#fff",
-              padding: "0.5rem 1rem",
-              borderRadius: "4px",
-              textDecoration: "none",
-              fontSize: "0.9rem",
+              position: "absolute",
+              left: "1rem",
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "var(--color-text-muted)",
             }}
           >
-            + Novo projeto
-          </Link>
+            🔍
+          </span>
+          <input
+            className="sga-search"
+            placeholder="Buscar projeto ou cliente..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
 
         {error && (
-          <p style={{ color: "#c0392b", marginTop: "1rem" }}>
+          <p style={{ color: "#c0392b", marginTop: "1.5rem" }}>
             Não foi possível carregar os projetos: {error}
           </p>
         )}
 
         {!error && projects === null && (
-          <p style={{ color: "#666", marginTop: "1rem" }}>Carregando...</p>
+          <p style={{ color: "var(--color-text-secondary)", marginTop: "1.5rem" }}>Carregando...</p>
         )}
 
         {!error && projects !== null && projects.length === 0 && (
           <div
-            style={{
-              marginTop: "1.5rem",
-              padding: "2rem",
-              border: "1px dashed #ccc",
-              borderRadius: "8px",
-              textAlign: "center",
-              color: "#666",
-            }}
+            className="sga-card"
+            style={{ marginTop: "1.5rem", textAlign: "center", color: "var(--color-text-secondary)" }}
           >
-            <p>Nenhum projeto ativo ainda.</p>
-            <Link href="/projects/new" style={{ color: "#111", fontWeight: "bold" }}>
-              + Adicionar o primeiro projeto
+            <p>Nenhum projeto ainda.</p>
+            <Link href="/projects/new" style={{ color: "var(--color-primary)", fontWeight: 700 }}>
+              + Criar o primeiro projeto
             </Link>
           </div>
         )}
 
         {!error && projects !== null && projects.length > 0 && (
-          <div style={{ marginTop: "1rem" }}>
-            {projects.map((project) => {
-              const status = STATUS_LABELS[project.status] ?? { label: project.status, color: "#666" };
+          <div style={{ marginTop: "1.5rem" }}>
+            <div
+              style={{
+                display: "flex",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                color: "var(--color-text-secondary)",
+                padding: "0 0.5rem 0.5rem",
+                borderBottom: "1px solid var(--color-border)",
+              }}
+            >
+              <span style={{ flex: "0 0 32px" }}></span>
+              <span style={{ flex: 2 }}>Nome</span>
+              <span style={{ flex: 1 }}>Cliente</span>
+              <span style={{ flex: 1 }}>Tipo</span>
+              <span style={{ flex: "0 0 100px" }}>Status</span>
+            </div>
+
+            {filtered.map((project) => {
+              const status = STATUS_LABELS[project.status] ?? {
+                label: project.status,
+                color: "#666",
+                bg: "#f5f5f5",
+              };
               return (
-                <Link
-                  key={project.id}
-                  href={`/projects/${project.id}`}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "1rem",
-                    border: "1px solid #e5e5e5",
-                    borderRadius: "8px",
-                    marginBottom: "0.75rem",
-                    textDecoration: "none",
-                    color: "#111",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontWeight: "bold" }}>{project.name}</div>
-                    <div style={{ fontSize: "0.85rem", color: "#666" }}>
-                      {clientName(project.clientId) && (
-                        <span>{clientName(project.clientId)} · </span>
-                      )}
-                      {PROJECT_TYPE_LABELS[project.type]}
-                    </div>
-                  </div>
-                  <span
-                    style={{
-                      fontSize: "0.8rem",
-                      color: status.color,
-                      border: `1px solid ${status.color}`,
-                      borderRadius: "999px",
-                      padding: "0.2rem 0.7rem",
-                    }}
-                  >
-                    {status.label}
+                <Link key={project.id} href={`/projects/${project.id}`} className="sga-row">
+                  <span style={{ flex: "0 0 32px", fontSize: "1.1rem" }}>🏠</span>
+                  <span style={{ flex: 2, fontWeight: 600 }}>{project.name}</span>
+                  <span style={{ flex: 1, color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>
+                    {clientName(project.clientId) ?? "—"}
+                  </span>
+                  <span style={{ flex: 1, color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>
+                    {PROJECT_TYPE_LABELS[project.type]}
+                  </span>
+                  <span style={{ flex: "0 0 100px" }}>
+                    <span
+                      className="sga-badge"
+                      style={{ color: status.color, background: status.bg }}
+                    >
+                      {status.label}
+                    </span>
                   </span>
                 </Link>
               );
             })}
+
+            {filtered.length === 0 && (
+              <p style={{ color: "var(--color-text-secondary)", padding: "1rem 0.5rem" }}>
+                Nenhum projeto encontrado para &quot;{search}&quot;.
+              </p>
+            )}
           </div>
         )}
       </div>
+
+      <Link href="/projects/new" className="sga-fab" title="Novo projeto">
+        +
+      </Link>
     </AppShell>
   );
 }
