@@ -7,6 +7,14 @@ import AppShell from "@/components/AppShell";
 import { apiFetch, ApiError } from "@/lib/api";
 import { ProjectDetail, STAGE_LABELS, StageStatus, Client } from "@/lib/types";
 
+interface TimeEntry {
+  id: string;
+  projectId: string;
+  description: string | null;
+  startedAt: string;
+  endedAt: string | null;
+}
+
 interface SiteVisit {
   id: string;
   visitDate: string;
@@ -80,6 +88,11 @@ export default function ProjectDetailPage() {
   const [siteVisits, setSiteVisits] = useState<SiteVisit[]>([]);
   const [visitObservation, setVisitObservation] = useState("");
   const [visitCommunicate, setVisitCommunicate] = useState(false);
+  const [runningTimer, setRunningTimer] = useState<TimeEntry | null>(null);
+  const [timerEntries, setTimerEntries] = useState<TimeEntry[]>([]);
+  const [timerTotalSeconds, setTimerTotalSeconds] = useState(0);
+  const [elapsedDisplay, setElapsedDisplay] = useState("00:00:00");
+  const [timerDescription, setTimerDescription] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -103,6 +116,19 @@ export default function ProjectDetailPage() {
         .catch(() => {});
       apiFetch<SiteVisit[]>(`/projects/${projectId}/site-visits`)
         .then(setSiteVisits)
+        .catch(() => {});
+      apiFetch<{ entries: TimeEntry[]; totalSeconds: number }>(
+        `/projects/${projectId}/timers`,
+      )
+        .then((r) => {
+          setTimerEntries(r.entries);
+          setTimerTotalSeconds(r.totalSeconds);
+        })
+        .catch(() => {});
+      apiFetch<TimeEntry | null>("/timers/running")
+        .then((r) => {
+          if (r && r.projectId === projectId) setRunningTimer(r);
+        })
         .catch(() => {});
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar projeto");
@@ -244,6 +270,68 @@ export default function ProjectDetailPage() {
     }
   }
 
+  // Atualiza o mostrador do cronometro a cada segundo, calculado a
+  // partir de startedAt (sem precisar consultar o servidor toda hora).
+  useEffect(() => {
+    if (!runningTimer) {
+      setElapsedDisplay("00:00:00");
+      return;
+    }
+    function tick() {
+      if (!runningTimer) return;
+      const elapsedMs = Date.now() - new Date(runningTimer.startedAt).getTime();
+      const totalSec = Math.max(0, Math.floor(elapsedMs / 1000));
+      const h = String(Math.floor(totalSec / 3600)).padStart(2, "0");
+      const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
+      const s = String(totalSec % 60).padStart(2, "0");
+      setElapsedDisplay(`${h}:${m}:${s}`);
+    }
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [runningTimer]);
+
+  async function startTimer() {
+    setBusy(true);
+    setActionMessage(null);
+    try {
+      const entry = await apiFetch<TimeEntry>("/timers/start", {
+        method: "POST",
+        body: JSON.stringify({ projectId, description: timerDescription || undefined }),
+      });
+      setRunningTimer(entry);
+      setTimerDescription("");
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : "Erro ao iniciar cronômetro");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function stopTimer() {
+    setBusy(true);
+    setActionMessage(null);
+    try {
+      await apiFetch("/timers/stop", { method: "POST" });
+      setRunningTimer(null);
+      const updated = await apiFetch<{ entries: TimeEntry[]; totalSeconds: number }>(
+        `/projects/${projectId}/timers`,
+      );
+      setTimerEntries(updated.entries);
+      setTimerTotalSeconds(updated.totalSeconds);
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : "Erro ao parar cronômetro");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function formatHours(totalSeconds: number) {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    return `${h}h ${m}min`;
+  }
+
   async function addSiteVisit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -341,6 +429,76 @@ export default function ProjectDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Horas Trabalhadas - Cronometro (inspirado na referencia visual) */}
+      <div
+        className="sga-card"
+        style={{
+          marginTop: "1rem",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "1rem",
+        }}
+      >
+        <div>
+          <div style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)", fontWeight: 600 }}>
+            {runningTimer ? "Em andamento" : "Horas trabalhadas"}
+          </div>
+          <div
+            style={{
+              fontSize: "1.7rem",
+              fontWeight: 800,
+              fontVariantNumeric: "tabular-nums",
+              color: runningTimer ? "var(--color-primary)" : "var(--color-text)",
+            }}
+          >
+            {runningTimer ? elapsedDisplay : formatHours(timerTotalSeconds)}
+          </div>
+          {!runningTimer && (
+            <div style={{ fontSize: "0.72rem", color: "var(--color-text-muted)" }}>
+              total registrado neste projeto
+            </div>
+          )}
+        </div>
+
+        {runningTimer ? (
+          <button onClick={stopTimer} disabled={busy} className="sga-btn sga-btn-primary">
+            ⏸ Parar cronômetro
+          </button>
+        ) : (
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+            <input
+              className="sga-input"
+              placeholder="O que você vai fazer? (opcional)"
+              value={timerDescription}
+              onChange={(e) => setTimerDescription(e.target.value)}
+              style={{ width: "220px" }}
+            />
+            <button onClick={startTimer} disabled={busy} className="sga-btn sga-btn-primary">
+              ▶ Iniciar cronômetro
+            </button>
+          </div>
+        )}
+      </div>
+
+      {timerEntries.length > 0 && (
+        <details style={{ marginTop: "0.5rem", fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>
+          <summary style={{ cursor: "pointer" }}>Ver histórico de sessões ({timerEntries.length})</summary>
+          <div style={{ marginTop: "0.5rem" }}>
+            {timerEntries.map((t) => (
+              <div key={t.id} style={{ padding: "0.4rem 0", borderTop: "1px solid var(--color-border)" }}>
+                {t.description && <strong>{t.description}</strong>}{" "}
+                {new Date(t.startedAt).toLocaleString("pt-BR")}
+                {t.endedAt
+                  ? ` → ${new Date(t.endedAt).toLocaleTimeString("pt-BR")}`
+                  : " (em andamento)"}
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
 
       {/* Portal do Cliente — link compartilhável (CR-001, item 1) */}
       <div

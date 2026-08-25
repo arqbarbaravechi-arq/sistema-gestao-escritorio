@@ -10,9 +10,11 @@ import { BillingModule } from "./modules/billing/billing.module";
 import { SiteVisitsModule } from "./modules/site-visits/site-visits.module";
 import { LibraryModule } from "./modules/library/library.module";
 import { TeamModule } from "./modules/team/team.module";
+import { TimeTrackingModule } from "./modules/time-tracking/time-tracking.module";
 
 // Módulo raiz. Fase 0 completa. CR-001: 7 de 8 itens prontos (Agentes
 // de IA em standby). Fase 2/3: Obra, Biblioteca, Financeiro, Equipe.
+// Horas Trabalhadas (Timers) — inspirado na referência visual.
 @Module({
   imports: [
     AuthModule,
@@ -25,6 +27,7 @@ import { TeamModule } from "./modules/team/team.module";
     SiteVisitsModule,
     LibraryModule,
     TeamModule,
+    TimeTrackingModule,
   ],
   controllers: [HealthController],
   providers: [],
