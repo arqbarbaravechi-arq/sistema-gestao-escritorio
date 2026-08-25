@@ -25,15 +25,15 @@ export default function TemplatesPage() {
     <AppShell>
       <div style={{ padding: "2rem", maxWidth: "600px" }}>
         <h1 style={{ fontSize: "1.3rem", margin: 0 }}>Templates de Projeto</h1>
-        <p style={{ color: "#666", marginTop: "0.5rem" }}>
+        <p style={{ color: "var(--color-text-secondary)", marginTop: "0.5rem" }}>
           Modelos prontos com prazo automático por etapa — escolha um ao criar um projeto novo,
           na tela &quot;+ Novo projeto&quot;.
         </p>
 
-        {error && <p style={{ color: "#c0392b", marginTop: "1rem" }}>{error}</p>}
+        {error && <p style={{ color: "var(--color-danger)", marginTop: "1rem" }}>{error}</p>}
 
         {!error && templates === null && (
-          <p style={{ color: "#666", marginTop: "1rem" }}>Carregando...</p>
+          <p style={{ color: "var(--color-text-secondary)", marginTop: "1rem" }}>Carregando...</p>
         )}
 
         {!error &&
@@ -43,12 +43,12 @@ export default function TemplatesPage() {
               style={{
                 marginTop: "1rem",
                 padding: "1rem",
-                border: "1px solid #e5e5e5",
-                borderRadius: "8px",
+                border: "1px solid var(--color-border)",
+                borderRadius: "12px",
               }}
             >
               <div style={{ fontWeight: "bold" }}>{t.name}</div>
-              <div style={{ fontSize: "0.85rem", color: "#666", marginTop: "0.2rem" }}>
+              <div style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", marginTop: "0.2rem" }}>
                 {t.description}
               </div>
             </div>
@@ -59,8 +59,8 @@ export default function TemplatesPage() {
             marginTop: "1.5rem",
             padding: "1rem",
             border: "1px dashed #ccc",
-            borderRadius: "8px",
-            color: "#666",
+            borderRadius: "12px",
+            color: "var(--color-text-secondary)",
             fontSize: "0.85rem",
           }}
         >

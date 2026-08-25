@@ -111,7 +111,7 @@ export default function CrmPage() {
   if (!leads && !error) {
     return (
       <AppShell>
-        <p style={{ padding: "2rem", color: "#666" }}>Carregando...</p>
+        <p style={{ padding: "2rem", color: "var(--color-text-secondary)" }}>Carregando...</p>
       </AppShell>
     );
   }
@@ -124,10 +124,10 @@ export default function CrmPage() {
           <Link
             href="/crm/new"
             style={{
-              background: "#111",
+              background: "#111111",
               color: "#fff",
               padding: "0.5rem 1rem",
-              borderRadius: "4px",
+              borderRadius: "999px",
               textDecoration: "none",
               fontSize: "0.9rem",
             }}
@@ -136,7 +136,7 @@ export default function CrmPage() {
           </Link>
         </div>
 
-        {error && <p style={{ color: "#c0392b", marginTop: "1rem" }}>{error}</p>}
+        {error && <p style={{ color: "var(--color-danger)", marginTop: "1rem" }}>{error}</p>}
 
         <div
           style={{
@@ -155,7 +155,7 @@ export default function CrmPage() {
                   style={{
                     fontSize: "0.75rem",
                     fontWeight: "bold",
-                    color: "#666",
+                    color: "var(--color-text-secondary)",
                     marginBottom: "0.5rem",
                     textTransform: "uppercase",
                   }}
@@ -168,23 +168,23 @@ export default function CrmPage() {
                     key={lead.id}
                     style={{
                       background: "#fff",
-                      border: "1px solid #e5e5e5",
-                      borderRadius: "8px",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: "12px",
                       padding: "0.75rem",
                       marginBottom: "0.5rem",
                       fontSize: "0.85rem",
                     }}
                   >
                     <div style={{ fontWeight: "bold" }}>{lead.name}</div>
-                    <div style={{ fontSize: "0.75rem", color: "#999", marginTop: "0.15rem" }}>
+                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginTop: "0.15rem" }}>
                       {ORIGIN_LABELS[lead.origin] ?? lead.origin}
                       {lead.projectType && ` · ${lead.projectType}`}
                     </div>
                     {lead.budgetRange && (
-                      <div style={{ fontSize: "0.75rem", color: "#999" }}>{lead.budgetRange}</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>{lead.budgetRange}</div>
                     )}
                     {lead.lossReason && (
-                      <div style={{ fontSize: "0.75rem", color: "#dc2626", marginTop: "0.3rem" }}>
+                      <div style={{ fontSize: "0.75rem", color: "var(--color-danger)", marginTop: "0.3rem" }}>
                         Motivo: {lead.lossReason}
                       </div>
                     )}
@@ -240,20 +240,20 @@ const miniButton: React.CSSProperties = {
   fontSize: "0.72rem",
   background: "#fff",
   border: "1px solid #ccc",
-  borderRadius: "4px",
+  borderRadius: "999px",
   padding: "0.25rem 0.5rem",
   cursor: "pointer",
 };
 
 const miniButtonPrimary: React.CSSProperties = {
   ...miniButton,
-  background: "#111",
+  background: "#111111",
   color: "#fff",
   border: "none",
 };
 
 const miniButtonDanger: React.CSSProperties = {
   ...miniButton,
-  color: "#dc2626",
+  color: "var(--color-danger)",
   borderColor: "#dc2626",
 };

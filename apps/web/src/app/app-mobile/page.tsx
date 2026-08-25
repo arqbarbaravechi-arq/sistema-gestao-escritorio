@@ -5,7 +5,7 @@ export default function AppMobilePage() {
     <AppShell>
       <div style={{ padding: "2rem", maxWidth: "600px" }}>
         <h1 style={{ fontSize: "1.3rem", margin: 0 }}>App no Celular</h1>
-        <p style={{ color: "#666", marginTop: "0.5rem" }}>
+        <p style={{ color: "var(--color-text-secondary)", marginTop: "0.5rem" }}>
           O sistema já pode ser instalado no seu celular como um aplicativo — com ícone na tela
           inicial, abrindo em tela cheia, sem a barra do navegador.
         </p>
@@ -14,8 +14,8 @@ export default function AppMobilePage() {
           style={{
             marginTop: "1.5rem",
             padding: "1.5rem",
-            border: "1px solid #e5e5e5",
-            borderRadius: "8px",
+            border: "1px solid var(--color-border)",
+            borderRadius: "12px",
           }}
         >
           <p style={{ fontWeight: "bold", fontSize: "0.9rem", margin: 0 }}>📱 No iPhone (Safari)</p>
@@ -34,8 +34,8 @@ export default function AppMobilePage() {
           style={{
             marginTop: "1rem",
             padding: "1.5rem",
-            border: "1px solid #e5e5e5",
-            borderRadius: "8px",
+            border: "1px solid var(--color-border)",
+            borderRadius: "12px",
           }}
         >
           <p style={{ fontWeight: "bold", fontSize: "0.9rem", margin: 0 }}>🤖 No Android (Chrome)</p>
@@ -57,8 +57,8 @@ export default function AppMobilePage() {
             marginTop: "1rem",
             padding: "1rem",
             border: "1px dashed #ccc",
-            borderRadius: "8px",
-            color: "#666",
+            borderRadius: "12px",
+            color: "var(--color-text-secondary)",
             fontSize: "0.85rem",
           }}
         >

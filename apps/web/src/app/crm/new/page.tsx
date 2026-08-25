@@ -50,7 +50,7 @@ export default function NewLeadPage() {
 
   return (
     <main style={{ fontFamily: "sans-serif", maxWidth: "480px", margin: "3rem auto", padding: "0 1.5rem" }}>
-      <Link href="/crm" style={{ color: "#666", fontSize: "0.85rem" }}>
+      <Link href="/crm" style={{ color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>
         ← Voltar
       </Link>
       <h1 style={{ fontSize: "1.25rem", marginTop: "1rem" }}>Novo lead</h1>
@@ -137,7 +137,7 @@ export default function NewLeadPage() {
         </label>
 
         {error && (
-          <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem" }}>{error}</p>
+          <p style={{ color: "var(--color-danger)", fontSize: "0.85rem", marginBottom: "1rem" }}>{error}</p>
         )}
 
         <button
@@ -146,10 +146,10 @@ export default function NewLeadPage() {
           style={{
             width: "100%",
             padding: "0.6rem",
-            background: "#111",
+            background: "#111111",
             color: "#fff",
             border: "none",
-            borderRadius: "4px",
+            borderRadius: "999px",
             cursor: "pointer",
           }}
         >

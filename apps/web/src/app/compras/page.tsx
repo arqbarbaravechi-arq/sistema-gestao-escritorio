@@ -60,7 +60,7 @@ export default function ComprasPage() {
     <AppShell>
       <div style={{ padding: "2rem", maxWidth: "640px" }}>
         <h1 style={{ fontSize: "1.3rem", margin: 0 }}>Gestão de Compras</h1>
-        <p style={{ color: "#666", marginTop: "0.5rem", fontSize: "0.85rem" }}>
+        <p style={{ color: "var(--color-text-secondary)", marginTop: "0.5rem", fontSize: "0.85rem" }}>
           Cadastre fornecedores aqui. Para registrar e comparar cotações de um projeto
           específico, abra o projeto em &quot;Projetos&quot; — lá aparece a seção de cotações.
         </p>
@@ -69,8 +69,8 @@ export default function ComprasPage() {
           style={{
             marginTop: "1.5rem",
             padding: "1rem",
-            border: "1px solid #e5e5e5",
-            borderRadius: "8px",
+            border: "1px solid var(--color-border)",
+            borderRadius: "12px",
           }}
         >
           <div style={{ fontWeight: "bold", fontSize: "0.9rem", marginBottom: "0.75rem" }}>
@@ -107,10 +107,10 @@ export default function ComprasPage() {
               type="submit"
               disabled={saving}
               style={{
-                background: "#111",
+                background: "#111111",
                 color: "#fff",
                 border: "none",
-                borderRadius: "4px",
+                borderRadius: "999px",
                 padding: "0.45rem 1rem",
                 cursor: "pointer",
               }}
@@ -120,13 +120,13 @@ export default function ComprasPage() {
           </form>
         </div>
 
-        {error && <p style={{ color: "#c0392b", marginTop: "1rem" }}>{error}</p>}
+        {error && <p style={{ color: "var(--color-danger)", marginTop: "1rem" }}>{error}</p>}
 
         <div style={{ marginTop: "1.5rem" }}>
-          {suppliers === null && !error && <p style={{ color: "#666" }}>Carregando...</p>}
+          {suppliers === null && !error && <p style={{ color: "var(--color-text-secondary)" }}>Carregando...</p>}
 
           {suppliers !== null && suppliers.length === 0 && (
-            <p style={{ color: "#666", fontSize: "0.85rem" }}>Nenhum fornecedor cadastrado ainda.</p>
+            <p style={{ color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>Nenhum fornecedor cadastrado ainda.</p>
           )}
 
           {suppliers?.map((s) => (
@@ -136,13 +136,13 @@ export default function ComprasPage() {
                 display: "flex",
                 justifyContent: "space-between",
                 padding: "0.7rem 1rem",
-                border: "1px solid #e5e5e5",
-                borderRadius: "8px",
+                border: "1px solid var(--color-border)",
+                borderRadius: "12px",
                 marginBottom: "0.5rem",
               }}
             >
               <span>{s.name}</span>
-              <span style={{ fontSize: "0.75rem", color: "#666" }}>
+              <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
                 {CATEGORY_LABELS[s.category] ?? s.category}
               </span>
             </div>

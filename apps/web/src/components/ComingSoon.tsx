@@ -6,17 +6,16 @@ interface ComingSoonProps {
 
 export default function ComingSoon({ title, description, phase }: ComingSoonProps) {
   return (
-    <div style={{ padding: "2rem", maxWidth: "600px" }}>
+    <div style={{ padding: "2rem 2.5rem", maxWidth: "600px" }}>
       <h1 style={{ fontSize: "1.3rem", margin: 0 }}>{title}</h1>
-      <p style={{ color: "#666", marginTop: "0.5rem" }}>{description}</p>
+      <p style={{ color: "var(--color-text-secondary)", marginTop: "0.5rem" }}>{description}</p>
 
       <div
+        className="sga-card"
         style={{
           marginTop: "1.5rem",
-          padding: "1.5rem",
-          border: "1px dashed #ccc",
-          borderRadius: "8px",
-          color: "#666",
+          borderStyle: "dashed",
+          color: "var(--color-text-secondary)",
         }}
       >
         <p style={{ margin: 0 }}>

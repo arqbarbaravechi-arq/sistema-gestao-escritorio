@@ -5,7 +5,7 @@ export default function PagamentosPage() {
     <AppShell>
       <div style={{ padding: "2rem", maxWidth: "600px" }}>
         <h1 style={{ fontSize: "1.3rem", margin: 0 }}>Pagamento Integrado</h1>
-        <p style={{ color: "#666", marginTop: "0.5rem" }}>
+        <p style={{ color: "var(--color-text-secondary)", marginTop: "0.5rem" }}>
           Não existe uma tela única de &quot;pagamentos&quot; — cada projeto tem sua própria
           seção de cobranças. Abra o projeto em &quot;Projetos&quot; para criar e acompanhar.
         </p>
@@ -14,8 +14,8 @@ export default function PagamentosPage() {
           style={{
             marginTop: "1.5rem",
             padding: "1.5rem",
-            border: "1px solid #e5e5e5",
-            borderRadius: "8px",
+            border: "1px solid var(--color-border)",
+            borderRadius: "12px",
           }}
         >
           <p style={{ margin: 0, fontWeight: "bold", fontSize: "0.9rem" }}>O que já funciona</p>
@@ -31,8 +31,8 @@ export default function PagamentosPage() {
             marginTop: "1rem",
             padding: "1.5rem",
             border: "1px dashed #ccc",
-            borderRadius: "8px",
-            color: "#666",
+            borderRadius: "12px",
+            color: "var(--color-text-secondary)",
             fontSize: "0.85rem",
           }}
         >

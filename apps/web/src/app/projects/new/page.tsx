@@ -63,7 +63,7 @@ export default function NewProjectPage() {
   if (clients === null) {
     return (
       <main style={{ fontFamily: "sans-serif", maxWidth: "480px", margin: "3rem auto", padding: "0 1.5rem" }}>
-        <p style={{ color: "#666" }}>Carregando...</p>
+        <p style={{ color: "var(--color-text-secondary)" }}>Carregando...</p>
       </main>
     );
   }
@@ -73,7 +73,7 @@ export default function NewProjectPage() {
   if (clients.length === 0) {
     return (
       <main style={{ fontFamily: "sans-serif", maxWidth: "480px", margin: "3rem auto", padding: "0 1.5rem" }}>
-        <Link href="/dashboard" style={{ color: "#666", fontSize: "0.85rem" }}>
+        <Link href="/dashboard" style={{ color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>
           ← Voltar
         </Link>
         <h1 style={{ fontSize: "1.25rem", marginTop: "1rem" }}>Novo projeto</h1>
@@ -82,8 +82,8 @@ export default function NewProjectPage() {
             marginTop: "1.5rem",
             padding: "1.5rem",
             border: "1px dashed #ccc",
-            borderRadius: "8px",
-            color: "#666",
+            borderRadius: "12px",
+            color: "var(--color-text-secondary)",
           }}
         >
           <p style={{ margin: 0 }}>
@@ -94,10 +94,10 @@ export default function NewProjectPage() {
             style={{
               display: "inline-block",
               marginTop: "1rem",
-              background: "#111",
+              background: "#111111",
               color: "#fff",
               padding: "0.5rem 1rem",
-              borderRadius: "4px",
+              borderRadius: "999px",
               textDecoration: "none",
               fontSize: "0.9rem",
             }}
@@ -111,11 +111,11 @@ export default function NewProjectPage() {
 
   return (
     <main style={{ fontFamily: "sans-serif", maxWidth: "480px", margin: "3rem auto", padding: "0 1.5rem" }}>
-      <Link href="/dashboard" style={{ color: "#666", fontSize: "0.85rem" }}>
+      <Link href="/dashboard" style={{ color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>
         ← Voltar
       </Link>
       <h1 style={{ fontSize: "1.25rem", marginTop: "1rem" }}>Novo projeto</h1>
-      <p style={{ color: "#666", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
+      <p style={{ color: "var(--color-text-secondary)", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
         As 8 etapas padrão (Briefing até Entrega) são criadas automaticamente.
       </p>
 
@@ -139,7 +139,7 @@ export default function NewProjectPage() {
               </option>
             ))}
           </select>
-          <Link href="/clients/new" style={{ fontSize: "0.78rem", color: "#666" }}>
+          <Link href="/clients/new" style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)" }}>
             + Cadastrar um novo cliente
           </Link>
         </label>
@@ -192,14 +192,14 @@ export default function NewProjectPage() {
         </label>
 
         {selectedTemplate && (
-          <p style={{ fontSize: "0.78rem", color: "#666", marginBottom: "1.5rem", marginTop: "0.3rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)", marginBottom: "1.5rem", marginTop: "0.3rem" }}>
             {selectedTemplate.description}
           </p>
         )}
         {!selectedTemplate && <div style={{ marginBottom: "1.5rem" }} />}
 
         {error && (
-          <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem" }}>{error}</p>
+          <p style={{ color: "var(--color-danger)", fontSize: "0.85rem", marginBottom: "1rem" }}>{error}</p>
         )}
 
         <button
@@ -208,10 +208,10 @@ export default function NewProjectPage() {
           style={{
             width: "100%",
             padding: "0.6rem",
-            background: "#111",
+            background: "#111111",
             color: "#fff",
             border: "none",
-            borderRadius: "4px",
+            borderRadius: "999px",
             cursor: "pointer",
           }}
         >

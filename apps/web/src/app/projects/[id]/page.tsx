@@ -405,7 +405,7 @@ export default function ProjectDetailPage() {
     return (
       <AppShell>
         <main style={{ fontFamily: "sans-serif", padding: "2rem", maxWidth: "720px" }}>
-          <p style={{ color: "#c0392b" }}>{error}</p>
+          <p style={{ color: "var(--color-danger)" }}>{error}</p>
           <Link href="/dashboard">← Voltar</Link>
         </main>
       </AppShell>
@@ -416,7 +416,7 @@ export default function ProjectDetailPage() {
     return (
       <AppShell>
         <main style={{ fontFamily: "sans-serif", padding: "2rem" }}>
-          <p style={{ color: "#666" }}>Carregando...</p>
+          <p style={{ color: "var(--color-text-secondary)" }}>Carregando...</p>
         </main>
       </AppShell>
     );
@@ -426,23 +426,36 @@ export default function ProjectDetailPage() {
 
   return (
     <AppShell>
-    <main style={{ fontFamily: "sans-serif", padding: "2rem", maxWidth: "720px", margin: "0 auto" }}>
-      <Link href="/dashboard" style={{ color: "#666", fontSize: "0.85rem" }}>
+    <main style={{ padding: "2rem 2.5rem", maxWidth: "760px", margin: "0 auto" }}>
+      <Link href="/dashboard" style={{ color: "var(--color-text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
         ← Projetos
       </Link>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "0.5rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "0.75rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.4rem", margin: 0 }}>{project.name}</h1>
+          <h1 style={{ fontSize: "1.5rem", margin: 0, fontWeight: 800 }}>{project.name}</h1>
           {client && (
-            <p style={{ color: "#333", fontSize: "0.85rem", margin: "0.2rem 0 0" }}>
-              Cliente: <strong>{client.name}</strong>
+            <p style={{ color: "var(--color-text-secondary)", fontSize: "0.85rem", margin: "0.3rem 0 0" }}>
+              Cliente: <strong style={{ color: "var(--color-text)" }}>{client.name}</strong>
             </p>
           )}
-          <p style={{ color: "#666", fontSize: "0.85rem", margin: "0.25rem 0 0" }}>
-            Status: <strong>{project.status}</strong>
+          <span
+            className="sga-badge"
+            style={{
+              marginTop: "0.5rem",
+              display: "inline-block",
+              color:
+                project.status === "ATIVO"
+                  ? "var(--color-success)"
+                  : project.status === "PAUSADO"
+                    ? "var(--color-warning)"
+                    : "var(--color-danger)",
+              background: "var(--color-bg-subtle)",
+            }}
+          >
+            {project.status}
             {project.statusReason && ` — ${project.statusReason}`}
-          </p>
+          </span>
         </div>
         {project.status === "ATIVO" && (
           <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -531,16 +544,16 @@ export default function ProjectDetailPage() {
         style={{
           marginTop: "1rem",
           padding: "1rem",
-          border: "1px solid #e5e5e5",
-          borderRadius: "8px",
+          border: "1px solid var(--color-border)",
+          borderRadius: "12px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
         }}
       >
         <div>
-          <div style={{ fontSize: "0.85rem", color: "#666" }}>Link para o cliente acompanhar</div>
-          <div style={{ fontSize: "0.8rem", color: "#999", marginTop: "0.15rem" }}>
+          <div style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)" }}>Link para o cliente acompanhar</div>
+          <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginTop: "0.15rem" }}>
             Sem necessidade de login — qualquer pessoa com o link consegue ver o progresso
           </div>
         </div>
@@ -561,20 +574,20 @@ export default function ProjectDetailPage() {
         style={{
           marginTop: "1.5rem",
           padding: "1rem",
-          border: "1px solid #e5e5e5",
-          borderRadius: "8px",
+          border: "1px solid var(--color-border)",
+          borderRadius: "12px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
         }}
       >
         <div>
-          <div style={{ fontSize: "0.85rem", color: "#666" }}>Rodadas de revisão (por projeto)</div>
+          <div style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)" }}>Rodadas de revisão (por projeto)</div>
           <div style={{ fontSize: "1.1rem", fontWeight: "bold" }}>
             {"●".repeat(revisionRoundsUsed)}
             {"○".repeat(revisionRoundsAvailable)}
             {"  "}
-            <span style={{ fontWeight: "normal", fontSize: "0.85rem", color: "#666" }}>
+            <span style={{ fontWeight: "normal", fontSize: "0.85rem", color: "var(--color-text-secondary)" }}>
               {revisionRoundsUsed} de {revisionRoundsUsed + revisionRoundsAvailable} usadas
             </span>
           </div>
@@ -599,16 +612,16 @@ export default function ProjectDetailPage() {
         style={{
           marginTop: "1.5rem",
           padding: "1rem",
-          border: "1px solid #e5e5e5",
-          borderRadius: "8px",
+          border: "1px solid var(--color-border)",
+          borderRadius: "12px",
         }}
       >
-        <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.5rem" }}>
+        <div style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", marginBottom: "0.5rem" }}>
           Cotações de fornecedores
         </div>
 
         {suppliers.length === 0 ? (
-          <p style={{ fontSize: "0.8rem", color: "#999" }}>
+          <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
             Nenhum fornecedor cadastrado ainda — cadastre em &quot;Gestão de Compras&quot; no menu.
           </p>
         ) : (
@@ -686,14 +699,14 @@ export default function ProjectDetailPage() {
         style={{
           marginTop: "1.5rem",
           padding: "1rem",
-          border: "1px solid #e5e5e5",
-          borderRadius: "8px",
+          border: "1px solid var(--color-border)",
+          borderRadius: "12px",
         }}
       >
-        <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.25rem" }}>
+        <div style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", marginBottom: "0.25rem" }}>
           Cobranças
         </div>
-        <p style={{ fontSize: "0.72rem", color: "#999", marginBottom: "0.5rem" }}>
+        <p style={{ fontSize: "0.72rem", color: "var(--color-text-muted)", marginBottom: "0.5rem" }}>
           Controle manual — marque como paga quando o dinheiro chegar (Pix, transferência).
           Não processa pagamento online.
         </p>
@@ -761,11 +774,11 @@ export default function ProjectDetailPage() {
         style={{
           marginTop: "1.5rem",
           padding: "1rem",
-          border: "1px solid #e5e5e5",
-          borderRadius: "8px",
+          border: "1px solid var(--color-border)",
+          borderRadius: "12px",
         }}
       >
-        <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.5rem" }}>
+        <div style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", marginBottom: "0.5rem" }}>
           Obra — Visitas técnicas
         </div>
 
@@ -794,7 +807,7 @@ export default function ProjectDetailPage() {
         </form>
 
         {siteVisits.length === 0 ? (
-          <p style={{ fontSize: "0.8rem", color: "#999" }}>Nenhuma visita registrada ainda.</p>
+          <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>Nenhuma visita registrada ainda.</p>
         ) : (
           <div>
             {siteVisits.map((v) => (
@@ -806,13 +819,13 @@ export default function ProjectDetailPage() {
                   fontSize: "0.85rem",
                 }}
               >
-                <div style={{ fontSize: "0.72rem", color: "#999" }}>
+                <div style={{ fontSize: "0.72rem", color: "var(--color-text-muted)" }}>
                   {new Date(v.visitDate).toLocaleString("pt-BR")}
                   {v.communicateToClient && (
                     <span
                       style={{
                         marginLeft: "0.5rem",
-                        color: "#dc2626",
+                        color: "var(--color-danger)",
                         fontWeight: "bold",
                       }}
                     >
@@ -838,8 +851,8 @@ export default function ProjectDetailPage() {
               justifyContent: "space-between",
               alignItems: "center",
               padding: "0.75rem 1rem",
-              border: "1px solid #e5e5e5",
-              borderRadius: "8px",
+              border: "1px solid var(--color-border)",
+              borderRadius: "12px",
               marginBottom: "0.5rem",
             }}
           >
@@ -865,7 +878,7 @@ export default function ProjectDetailPage() {
                     style={{
                       marginLeft: "0.5rem",
                       fontSize: "0.7rem",
-                      color: "#dc2626",
+                      color: "var(--color-danger)",
                       border: "1px solid #dc2626",
                       borderRadius: "999px",
                       padding: "0.1rem 0.5rem",
@@ -878,7 +891,7 @@ export default function ProjectDetailPage() {
               <div style={{ fontSize: "0.8rem", color: STAGE_STATUS_COLOR[stage.status] }}>
                 {STAGE_STATUS_LABEL[stage.status]}
                 {stage.dueDate && (
-                  <span style={{ color: "#999", marginLeft: "0.4rem" }}>
+                  <span style={{ color: "var(--color-text-muted)", marginLeft: "0.4rem" }}>
                     · prazo: {new Date(stage.dueDate).toLocaleDateString("pt-BR")}
                   </span>
                 )}
@@ -926,10 +939,11 @@ export default function ProjectDetailPage() {
 
 const buttonSecondary: React.CSSProperties = {
   background: "#fff",
-  border: "1px solid #ccc",
-  borderRadius: "4px",
-  padding: "0.4rem 0.8rem",
-  fontSize: "0.85rem",
+  border: "1px solid var(--color-border)",
+  borderRadius: "999px",
+  padding: "0.4rem 0.9rem",
+  fontSize: "0.82rem",
+  fontWeight: 600,
   cursor: "pointer",
 };
 
@@ -937,18 +951,20 @@ const buttonPrimary: React.CSSProperties = {
   background: "#111",
   color: "#fff",
   border: "none",
-  borderRadius: "4px",
-  padding: "0.4rem 0.8rem",
-  fontSize: "0.85rem",
+  borderRadius: "999px",
+  padding: "0.4rem 0.9rem",
+  fontSize: "0.82rem",
+  fontWeight: 600,
   cursor: "pointer",
 };
 
 const buttonDanger: React.CSSProperties = {
   background: "#fff",
-  color: "#dc2626",
-  border: "1px solid #dc2626",
-  borderRadius: "4px",
-  padding: "0.4rem 0.8rem",
-  fontSize: "0.85rem",
+  color: "var(--color-danger)",
+  border: "1px solid var(--color-danger)",
+  borderRadius: "999px",
+  padding: "0.4rem 0.9rem",
+  fontSize: "0.82rem",
+  fontWeight: 600,
   cursor: "pointer",
 };

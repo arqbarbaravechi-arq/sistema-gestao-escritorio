@@ -59,7 +59,7 @@ export default function CurvaAbcPage() {
     <AppShell>
       <div style={{ padding: "2rem", maxWidth: "640px" }}>
         <h1 style={{ fontSize: "1.3rem", margin: 0 }}>Curva ABC de Custos</h1>
-        <p style={{ color: "#666", marginTop: "0.5rem", fontSize: "0.85rem" }}>
+        <p style={{ color: "var(--color-text-secondary)", marginTop: "0.5rem", fontSize: "0.85rem" }}>
           Classifica as cotações já aprovadas de um projeto por impacto financeiro — Classe A
           (maior impacto, até 80% do custo acumulado), Classe B (até 95%) e Classe C (os 5%
           finais).
@@ -78,7 +78,7 @@ export default function CurvaAbcPage() {
           ))}
         </select>
 
-        {error && <p style={{ color: "#c0392b", marginTop: "1rem" }}>{error}</p>}
+        {error && <p style={{ color: "var(--color-danger)", marginTop: "1rem" }}>{error}</p>}
 
         {curve && curve.items.length === 0 && (
           <div
@@ -86,8 +86,8 @@ export default function CurvaAbcPage() {
               marginTop: "1.5rem",
               padding: "1.5rem",
               border: "1px dashed #ccc",
-              borderRadius: "8px",
-              color: "#666",
+              borderRadius: "12px",
+              color: "var(--color-text-secondary)",
               fontSize: "0.85rem",
             }}
           >
@@ -105,15 +105,15 @@ export default function CurvaAbcPage() {
                   style={{
                     flex: 1,
                     padding: "0.75rem",
-                    borderRadius: "8px",
-                    background: "#f9fafb",
+                    borderRadius: "12px",
+                    background: "var(--color-bg-subtle)",
                     textAlign: "center",
                   }}
                 >
                   <div style={{ color: CLASS_COLOR[cls], fontWeight: "bold", fontSize: "1.1rem" }}>
                     Classe {cls}
                   </div>
-                  <div style={{ fontSize: "0.8rem", color: "#666" }}>
+                  <div style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>
                     {curve.summary[`count${cls}` as keyof typeof curve.summary]} ite
                     {curve.summary[`count${cls}` as keyof typeof curve.summary] === 1 ? "m" : "ns"}
                   </div>
@@ -121,7 +121,7 @@ export default function CurvaAbcPage() {
               ))}
             </div>
 
-            <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.5rem" }}>
+            <div style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", marginBottom: "0.5rem" }}>
               Total aprovado: <strong>R$ {curve.totalValue.toLocaleString("pt-BR")}</strong>
             </div>
 
@@ -133,8 +133,8 @@ export default function CurvaAbcPage() {
                   justifyContent: "space-between",
                   alignItems: "center",
                   padding: "0.6rem 0.8rem",
-                  border: "1px solid #e5e5e5",
-                  borderRadius: "8px",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "12px",
                   marginBottom: "0.4rem",
                 }}
               >
@@ -142,7 +142,7 @@ export default function CurvaAbcPage() {
                   <div style={{ fontSize: "0.85rem" }}>
                     {CATEGORY_LABELS[item.category] ?? item.category}
                   </div>
-                  <div style={{ fontSize: "0.75rem", color: "#999" }}>
+                  <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
                     R$ {item.value.toLocaleString("pt-BR")} ({item.percentage}% do total) ·
                     acumulado {item.cumulativePercentage}%
                   </div>

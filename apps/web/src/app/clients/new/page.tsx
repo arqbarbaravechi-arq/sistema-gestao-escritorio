@@ -29,7 +29,7 @@ const fieldInput: React.CSSProperties = {
 
 const sectionTitle: React.CSSProperties = {
   fontSize: "0.78rem",
-  color: "#999",
+  color: "var(--color-text-muted)",
   textTransform: "uppercase",
   letterSpacing: "0.03em",
   marginTop: "1.5rem",
@@ -79,11 +79,11 @@ export default function NewClientPage() {
 
   return (
     <main style={{ fontFamily: "sans-serif", maxWidth: "520px", margin: "3rem auto", padding: "0 1.5rem 3rem" }}>
-      <Link href="/clients" style={{ color: "#666", fontSize: "0.85rem" }}>
+      <Link href="/clients" style={{ color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>
         ← Voltar
       </Link>
       <h1 style={{ fontSize: "1.25rem", marginTop: "1rem" }}>Novo cliente</h1>
-      <p style={{ color: "#666", fontSize: "0.85rem", marginBottom: "0.5rem" }}>
+      <p style={{ color: "var(--color-text-secondary)", fontSize: "0.85rem", marginBottom: "0.5rem" }}>
         Cadastre o cliente antes de criar o projeto dele. Só o nome é obrigatório — o resto pode
         ser preenchido depois.
       </p>
@@ -200,7 +200,7 @@ export default function NewClientPage() {
         )}
 
         {error && (
-          <p style={{ color: "#c0392b", fontSize: "0.85rem", marginTop: "0.5rem", marginBottom: "1rem" }}>
+          <p style={{ color: "var(--color-danger)", fontSize: "0.85rem", marginTop: "0.5rem", marginBottom: "1rem" }}>
             {error}
           </p>
         )}
@@ -211,10 +211,10 @@ export default function NewClientPage() {
           style={{
             width: "100%",
             padding: "0.6rem",
-            background: "#111",
+            background: "#111111",
             color: "#fff",
             border: "none",
-            borderRadius: "4px",
+            borderRadius: "999px",
             cursor: "pointer",
             marginTop: "1rem",
           }}
